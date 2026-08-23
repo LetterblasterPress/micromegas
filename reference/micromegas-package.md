@@ -9,6 +9,8 @@ Useful links:
 
 - <https://github.com/LetterblasterPress/micromegas>
 
+- <https://letterblasterpress.github.io/micromegas/>
+
 - Report bugs at
   <https://github.com/LetterblasterPress/micromegas/issues>
 
