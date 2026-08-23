@@ -6,7 +6,8 @@ Authors@R:
 Description: The micromegas package documents the planning and design of
     the Letterblaster Press edition of Micromégas by Voltaire.
 License: GPL (>= 3)
-URL: https://github.com/LetterblasterPress/micromegas
+URL: https://github.com/LetterblasterPress/micromegas,
+    https://letterblasterpress.github.io/micromegas/
 BugReports: https://github.com/LetterblasterPress/micromegas/issues
 Imports: 
     tibble

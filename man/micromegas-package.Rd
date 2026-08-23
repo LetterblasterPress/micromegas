@@ -12,6 +12,7 @@ The micromegas package documents the planning and design of the Letterblaster Pr
 Useful links:
 \itemize{
   \item \url{https://github.com/LetterblasterPress/micromegas}
+  \item \url{https://letterblasterpress.github.io/micromegas/}
   \item Report bugs at \url{https://github.com/LetterblasterPress/micromegas/issues}
 }
 
