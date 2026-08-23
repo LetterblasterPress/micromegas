@@ -1,0 +1,8 @@
+^_pkgdown\.yml$
+^\.github$
+^\.Rproj\.user$
+^codecov\.yml$
+^docs$
+^LICENSE\.md$
+^micromegas\.Rproj$
+^pkgdown$

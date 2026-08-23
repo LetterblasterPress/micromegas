@@ -1,0 +1,10 @@
+url: https://letterblasterpress.github.io/micromegas/
+template:
+  bootstrap: 5
+reference:
+  - title: "Developer tools"
+    desc: >
+      The following functions are intended to streamline common tasks for
+      package developers. They are not exported for use by typical package users.
+    contents:
+      - inst

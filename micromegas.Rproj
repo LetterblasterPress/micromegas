@@ -1,0 +1,34 @@
+Version: 1.0
+
+RestoreWorkspace: No
+SaveWorkspace: No
+AlwaysSaveHistory: Default
+
+EnableCodeIndexing: Yes
+UseSpacesForTab: Yes
+NumSpacesForTab: 2
+Encoding: UTF-8
+
+RnwWeave: knitr
+LaTeX: LuaLaTeX
+
+AutoAppendNewline: Yes
+StripTrailingWhitespace: Yes
+LineEndingConversion: Posix
+
+BuildType: Package
+PackageUseDevtools: Yes
+PackageInstallArgs: --no-multiarch --with-keep.source
+PackageCheckArgs: --force-multiarch --as-cran
+PackageRoxygenize: rd,collate,namespace
+
+UseNativePipeOperator: Yes
+
+MarkdownWrap: Column
+MarkdownWrapAtColumn: 80
+MarkdownReferences: Block
+MarkdownCanonical: Yes
+
+SpellingDictionary: en_US
+
+ProjectName: Micromégas
