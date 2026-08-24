@@ -52,3 +52,6 @@ rsconnect/
 
 # Quarto build files
 .quarto
+
+# Personal scratch directory
+scratch/
