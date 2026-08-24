@@ -2,6 +2,9 @@ url: https://letterblasterpress.github.io/micromegas/
 template:
   bootstrap: 5
 reference:
+  - title: "Micromégas text"
+    contents:
+      - source_text
   - title: "Developer tools"
     desc: >
       The following functions are intended to streamline common tasks for
@@ -11,3 +14,9 @@ reference:
       - dev
       - dev_check
       - dev_check_helpers
+articles:
+  - title: "Micromégas text"
+    navbar: "Micromégas text"
+    contents:
+      - source_text_md
+      - source_text_md_tex

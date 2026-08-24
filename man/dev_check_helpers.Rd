@@ -6,7 +6,6 @@
 \alias{dev_document}
 \alias{dev_spell_check}
 \alias{dev_build_site}
-\alias{dev_publish_vignettes}
 \alias{dev_coverage}
 \title{Helper functions called by \code{dev_check()}}
 \usage{
@@ -17,8 +16,6 @@ dev_document()
 dev_spell_check()
 
 dev_build_site()
-
-dev_publish_vignettes()
 
 dev_coverage(file = NULL)
 }
@@ -41,9 +38,8 @@ to \code{\link[devtools:document]{devtools::document()}} and \code{\link[usethis
 \item \code{\link[=dev_spell_check]{dev_spell_check()}} checks spelling of package documentation and vignettes
 with calls to \code{\link[spelling:spell_check_package]{spelling::spell_check_package()}} and
 \code{\link[spelling:update_wordlist]{spelling::update_wordlist()}}.
-\item \code{\link[=dev_build_site]{dev_build_site()}} builds the documentation site with calls to
-\code{\link[=dev_publish_vignettes]{dev_publish_vignettes()}} and \code{\link[pkgdown:build_site]{pkgdown::build_site()}}, then loads a
-preview in the RStudio Viewer pane.
+\item \code{\link[=dev_build_site]{dev_build_site()}} builds the documentation site with a call to
+\code{\link[pkgdown:build_site]{pkgdown::build_site()}}, then loads a preview in the RStudio Viewer pane.
 \item \code{\link[=dev_coverage]{dev_coverage()}} runs code coverage checks with calls to
 \code{\link[covr:package_coverage]{covr::package_coverage()}} and \code{\link[covr:file_report]{covr::file_report()}}.
 }
@@ -69,12 +65,6 @@ notebooks and R Markdown documents that are only run manually.
 To enable this feature, simply render R Markdown documents in \emph{vignettes-raw}
 with \code{keep_md: true}. When you are ready to "publish", simply check in the
 rendered \verb{*.md} file (plus any supporting files) into source control.
-
-\code{\link[=dev_publish_vignettes]{dev_publish_vignettes()}} employs a simple hack to add these documents to the
-package site without re-rendering. Briefly, the \emph{vignettes-raw} directory is
-copied into the \code{vignettes} directory, and some name changes are applied so
-\code{\link[pkgdown:build_site]{pkgdown::build_site()}} uses the (pre-rendered) \emph{Markdown} file, rather than
-the source \emph{R Markdown} file.
 }
 
 \subsection{Coverage reports}{

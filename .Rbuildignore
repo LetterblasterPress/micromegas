@@ -1,9 +1,11 @@
 ^_pkgdown\.yml$
 ^\.github$
 ^\.Rproj\.user$
+^cache$
 ^codecov\.yml$
 ^docs$
 ^LICENSE\.md$
 ^micromegas\.Rproj$
 ^pkgdown$
 ^scratch$
+^vignettes/precompile\.R$

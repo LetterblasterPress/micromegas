@@ -212,61 +212,12 @@ test_that("dev_coverage() calls `package_coverage` then `file_report` on request
   expect_args(mock_file_report, 1, "mock package coverage", "mock file")
 })
 
-## dev_publish_vignettes #######################################################
-
-## dev_publish_vignettes() - no dir
-test_that("dev_publish_vignettes() returns TRUE if vignettes-raw directory does not exist", {
-  wd <- dir_create(file_temp())
-  on.exit(unlink(wd))
-  wd_v <- dir_create(wd, "vignettes")
-  wd_vs <- path(wd, "vignettes-raw")
-  withr::with_dir(wd, expect_true(dev_publish_vignettes()))
-  expect_true(length(dir_ls(wd_v, type = "file", recurse = TRUE)) == 0L)
-})
-
-## dev_publish_vignettes() - empty dir
-test_that("dev_publish_vignettes() returns TRUE if vignettes-raw directory is empty", {
-  wd <- dir_create(file_temp())
-  on.exit(unlink(wd))
-  wd_v <- dir_create(wd, "vignettes")
-  wd_vs <- dir_create(wd, "vignettes-raw")
-  withr::with_dir(wd, expect_true(dev_publish_vignettes()))
-  expect_true(length(dir_ls(wd_v, type = "file", recurse = TRUE)) == 0L)
-})
-
-## dev_publish_vignettes() - dir with files
-test_that("dev_publish_vignettes() returns TRUE and copies existing files", {
-  wd <- dir_create(file_temp())
-  on.exit(unlink(wd))
-  wd_v <- dir_create(path(wd, "vignettes"))
-  wd_vs <- dir_create(path(wd, "vignettes-raw"))
-  wd_vs_a <- dir_create(path(wd_vs, "assets"))
-
-  qmd <- uuid::UUIDgenerate()
-  md <- uuid::UUIDgenerate()
-  img <- uuid::UUIDgenerate()
-
-  write(qmd, path(wd_vs, "foo.qmd"))
-  write(md, path(wd_vs, "foo.md"))
-  write(img, path(wd_vs_a, "img"))
-
-  expect_true(withr::with_dir(wd, dev_publish_vignettes()))
-  expect_true(length(dir_ls(wd_v, type = "file", recurse = TRUE)) == 2L)
-  expect_identical(readLines(path(wd_v, "vignettes-raw", "foo.qmd")), md) # sic
-})
-
 ## dev_build_site ##############################################################
 
 ## dev_build_site() - with _pkgdown.yml
 test_that("dev_build_site() calls `build_site` without previewing if non-interactive", {
   stub(dev_build_site, "interactive", FALSE)
 
-  mock_dev_publish_vignettes <- mock(TRUE)
-  stub(dev_build_site, "dev_publish_vignettes", mock_dev_publish_vignettes)
-
-  mock_unlink <- mock(TRUE)
-  stub(dev_build_site, "unlink", mock_unlink)
-
   mock_build_site <- mock(NULL)
   stub(dev_build_site, "pkgdown::build_site", mock_build_site)
 
@@ -282,24 +233,16 @@ test_that("dev_build_site() calls `build_site` without previewing if non-interac
   stub(dev_build_site, "rstudioapi::viewer", mock_viewer)
 
   expect_true(dev_build_site())
-  expect_called(mock_dev_publish_vignettes, 1)
   expect_args(mock_build_site, 1, preview = FALSE)
   expect_called(mock_read_yaml, 0)
   expect_called(mock_dir_copy, 0)
   expect_called(mock_viewer, 0)
-  expect_args(mock_unlink, 1, "vignettes/vignettes-raw", recursive = TRUE)
 })
 
 ## dev_build_site() - with _pkgdown.yml
 test_that("dev_build_site() calls `build_site` and previews site in viewer using custom destination if specified in _pkgdown.yml", {
   stub(dev_build_site, "interactive", TRUE)
 
-  mock_dev_publish_vignettes <- mock(TRUE)
-  stub(dev_build_site, "dev_publish_vignettes", mock_dev_publish_vignettes)
-
-  mock_unlink <- mock(TRUE)
-  stub(dev_build_site, "unlink", mock_unlink)
-
   mock_build_site <- mock(NULL)
   stub(dev_build_site, "pkgdown::build_site", mock_build_site)
 
@@ -315,23 +258,15 @@ test_that("dev_build_site() calls `build_site` and previews site in viewer using
   stub(dev_build_site, "rstudioapi::viewer", mock_viewer)
 
   expect_true(dev_build_site())
-  expect_called(mock_dev_publish_vignettes, 1)
   expect_args(mock_build_site, 1, preview = FALSE)
   expect_called(mock_read_yaml, 1)
   expect_args(mock_dir_copy, 1, "mock destination", "temp_path")
   expect_args(mock_viewer, 1, fs::path("new_path/index.html"))
-  expect_args(mock_unlink, 1, "vignettes/vignettes-raw", recursive = TRUE)
 })
 
 ## dev_build_site() - with NULL destination
 test_that("dev_build_site() calls `build_site` and previews site in viewer using default destination if NULL destination", {
   stub(dev_build_site, "interactive", TRUE)
-
-  mock_dev_publish_vignettes <- mock(TRUE)
-  stub(dev_build_site, "dev_publish_vignettes", mock_dev_publish_vignettes)
-
-  mock_unlink <- mock(TRUE)
-  stub(dev_build_site, "unlink", mock_unlink)
 
   mock_build_site <- mock(NULL)
   stub(dev_build_site, "pkgdown::build_site", mock_build_site)
@@ -348,23 +283,15 @@ test_that("dev_build_site() calls `build_site` and previews site in viewer using
   stub(dev_build_site, "rstudioapi::viewer", mock_viewer)
 
   expect_true(dev_build_site())
-  expect_called(mock_dev_publish_vignettes, 1)
   expect_args(mock_build_site, 1, preview = FALSE)
   expect_called(mock_read_yaml, 1)
   expect_args(mock_dir_copy, 1, "docs", "temp_path")
   expect_args(mock_viewer, 1, fs::path("new_path/index.html"))
-  expect_args(mock_unlink, 1, "vignettes/vignettes-raw", recursive = TRUE)
 })
 
 ## dev_build_site() - with read_yaml error
 test_that("dev_build_site() calls `build_site` and previews site in viewer using default destination if read_yaml error", {
   stub(dev_build_site, "interactive", TRUE)
-
-  mock_dev_publish_vignettes <- mock(TRUE)
-  stub(dev_build_site, "dev_publish_vignettes", mock_dev_publish_vignettes)
-
-  mock_unlink <- mock(TRUE)
-  stub(dev_build_site, "unlink", mock_unlink)
 
   mock_build_site <- mock(NULL)
   stub(dev_build_site, "pkgdown::build_site", mock_build_site)
@@ -381,12 +308,10 @@ test_that("dev_build_site() calls `build_site` and previews site in viewer using
   stub(dev_build_site, "rstudioapi::viewer", mock_viewer)
 
   expect_true(dev_build_site())
-  expect_called(mock_dev_publish_vignettes, 1)
   expect_args(mock_build_site, 1, preview = FALSE)
   expect_called(mock_read_yaml, 1)
   expect_args(mock_dir_copy, 1, "docs", "temp_path")
   expect_args(mock_viewer, 1, fs::path("new_path/index.html"))
-  expect_args(mock_unlink, 1, "vignettes/vignettes-raw", recursive = TRUE)
 })
 
 ## dev_check ###################################################################

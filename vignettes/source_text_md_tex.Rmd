@@ -1,0 +1,133 @@
+---
+title: "Inline typesetting controls"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Inline typesetting controls}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook takes the source text in Markdown and adds minimal LaTeX markup
+> in preparation for typesetting. Notably, it adds calls to the following custom
+> LaTeX functions:
+>
+> - `\chApre{}`--`\chGpre{}` and `\chApost{}`--`\chGpost{}` control the number
+>   of blank lines before & after each chapter heading.
+> - `\reflowepiC{}` and `\reflowepiE{}` give the option to break the epigraphs
+>   for chapters 3 & 5 into two lines.
+>
+> Avoiding undesirable page breaks (widows, orphans, etc.) may require adding
+> blank lines to the typeset page, and these functions effectively define
+> unobtrusive points where some of this vertical space can be inserted.
+
+
+
+Unwrap Markdown-formatted source text.
+
+
+``` r
+source_md_tex <- source_text("md") |>
+  to_tidy_md("markdown", to = "markdown", "--columns=9999")
+```
+
+Insert optional blank lines before each chapter.
+
+
+``` r
+source_md_tex <- source_md_tex |>
+  sub(pattern = "^(# .+ I)$", replacement = "`\\\\chApre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ II)$", replacement = "`\\\\chBpre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ III)$", replacement = "`\\\\chCpre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ IV)$", replacement = "`\\\\chDpre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ V)$", replacement = "`\\\\chEpre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ VI)$", replacement = "`\\\\chFpre{}`{=tex}\n\n\\1") |>
+  sub(pattern = "^(# .+ VII)$", replacement = "`\\\\chGpre{}`{=tex}\n\n\\1")
+```
+
+Insert optional blank lines after each chapter epigraph.
+
+
+``` r
+source_md_tex <- if_else(
+    lag(source_md_tex) %in% ":::",
+    "\n`\\ch%spost{}`{=tex}\n" |>
+      sprintf(c("", LETTERS)[1 + cumsum(lead(source_md_tex) %in% ":::")]),
+    source_md_tex
+  )
+```
+
+Manually break long epigraphs into lines and add the option to break two
+medium-length epigraphs.
+
+
+``` r
+source_md_tex <- source_md_tex |>
+  sub(
+    pattern = "(Voyage of an inhabitant of the Sirius star) (to the planet Saturn.)",
+    replacement = "| \\1\n| \\2"
+  ) |>
+  sub(
+    pattern = "(Conversation between the inhabitant) (of Sirius and that of Saturn.)",
+    replacement = "| \\1\n| \\2"
+  ) |>
+  sub( # optional
+    pattern = "(Voyage of the two inhabitants) (of Sirius and Saturn.)",
+    replacement = "\\1\\\\reflowepiC{}\\2"
+  ) |>
+  sub( # optional
+    pattern = "(Experiments and reasonings) (of the two voyagers.)",
+    replacement = "\\1\\\\reflowepiE{}\\2"
+  )
+```
+
+Format initial words.
+
+
+``` r
+source_md_tex <- source_md_tex |>
+  sub(
+    pattern = "^On one",
+    replacement = "O\\\\hspace{11pt plus 1pt minus 2pt}{\\\\scshape n one}"
+  )
+```
+
+Format small caps.
+
+
+``` r
+source_md_tex <- source_md_tex |>
+  sub(
+    pattern = "book II, chapter II",
+    replacement = "book \\\\allsc{II}, chapter \\\\allsc{II}"
+  )
+```
+
+Protect the last word(s) in each regular paragraph from hyphenation.
+
+
+``` r
+source_md_tex <- if_else(
+  (
+    grepl("^:::", source_md_tex) |
+      grepl("^:::", lead(source_md_tex)) |
+      grepl("^:::", lag(source_md_tex)) |
+      grepl("^#", source_md_tex) |
+      grepl("^`\\\\ch.(pre|post)", source_md_tex)
+  ),
+  source_md_tex,
+  sub(
+    " (\\w{4,}[[:punct:]]*|\\w+ \\w{1,3}[[:punct:]]*)$",
+    " \\\\mbox{\\1}",
+    source_md_tex
+  )
+)
+```
+
+And finally, standardize markdown formatting and style.
+
+
+``` r
+source_md_tex <- to_tidy_md(source_md_tex, "markdown")
+```
+
+

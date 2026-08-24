@@ -1,0 +1,137 @@
+---
+title: "Source text"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Source text}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> The objective of this notebook is to download source text from Project
+> Gutenberg, remove extraneous content & markup, and convert it to minimally
+> formatted Markdown. The resulting file is saved as a package asset and
+> retrievable with a call to `source_text()`.
+
+
+
+Download source text from Project Gutenberg and convert it from HTML to
+Markdown.
+
+
+``` r
+html_dir <- dir_create(file_temp("source_html_"))
+on.exit(unlink(html_dir))
+
+source_md <- "https://www.gutenberg.org/cache/epub/30123/pg30123-h.zip" |>
+  pg_download(html_dir, zip = TRUE) |>
+  dir_ls(type = "file", glob = "*.html") |>
+  to_tidy_md("html+smart")
+```
+
+Remove front-matter & back-matter.
+
+
+``` r
+source_md <- source_md[
+  cumsum(grepl("# CHAPTER I\\.", source_md)) > 0 &
+    cumsum(grepl("^::: \\{#pg-footer", source_md)) < 1 &
+    cumsum(grepl("pg-end-separator", source_md)) == 0L
+]
+```
+
+Remove forced line breaks.
+
+
+``` r
+source_md <- source_md |>
+  paste(collapse = "NEWLINE") |>
+  gsub(pattern = "::: pg_body_wrapperNEWLINE\\\\NEWLINE:::", replacement = "") |>
+  strsplit("NEWLINE") |>
+  unlist()
+```
+
+Make chapters the top-level heading and remove unnecessary markup & formatting.
+
+
+``` r
+source_md <- source_md |>
+  gsub(pattern = "^(#+ .+) \\{.+}$", replacement = "\\1") |>
+  gsub(pattern = "^#{3} ", replacement = "# ") |>
+  gsub(pattern = "^# CHAPTER ([IVX]+)\\.$", replacement = "# Chapter \\1")
+```
+
+Remove chapter link targets.
+
+
+``` r
+source_md <- source_md |>
+  paste(collapse = "NEWLINE") |>
+  gsub(pattern = "::: pg_body_wrapperNEWLINE\\[\\]\\{#chap\\d+\\}NEWLINE:::", replacement = "") |>
+  strsplit("NEWLINE") |>
+  unlist()
+```
+
+Mark up special environments (chapter epigraphs, Aristotle quote, and closing).
+
+
+``` r
+source_md <- source_md |>
+  gsub(
+    pattern = "^#### (.+)$",
+    replacement = '::: {.epigraph data-latex=""}\n\\1\n:::'
+  ) |>
+  to_tidy_md("markdown", to = "markdown", "--columns=9999") |>
+  sub(
+    pattern = "\\*(Anima quaedam.+) (est quod.+)\\*.*$",
+    replacement = "\n\n::: {.aristotle data-latex=\"\"}\n| \\1\n| \\2.\n:::"
+  ) |>
+  to_tidy_md("markdown") |>
+  sub(
+    pattern = "^END OF THE HISTORY OF MICROMEGAS.+$",
+    replacement = '::: {.closing data-latex=""}\nEnd of the history of Micromegas.\n:::'
+  )
+```
+
+There is only one footnote -- a note from the translator indicating that a
+quotation in Greek has been translated to Latin. In context, simply adding
+"[Tr.]" inline after the quotation is sufficient, so the footnote and footnote
+mark can be removed.
+
+
+``` r
+source_md <- source_md |>
+  to_tidy_md("markdown", to = "markdown", "--columns=9999") |>
+  discard(grepl, pattern = "^\\\\\\[\\d+\\\\\\]") |>
+  to_tidy_md("markdown") |>
+  gsub(pattern = "\\\\\\[\\d+\\\\\\]", replacement = "") |>
+  sub(pattern = "ejusmodi sit\\.", replacement = "ejusmodi sit. [Tr.]")
+```
+
+As is, numbers less than teens are spelled out, order-of-magnitude estimates are
+spelled out, and everything else is written with numerals. However, numbers that
+begin sentences should also be spelled out.
+
+
+``` r
+source_md <- source_md |>
+  sub(pattern = '"60 radii', replacement = '"Sixty radii')
+```
+
+Fix miscellaneous typesetting issues.
+
+
+``` r
+source_md <- source_md |>
+  gsub(pattern = "....,", replacement = "...,", fixed = TRUE) |>
+  sub(pattern = "July 5, 1737", replacement = "July 5, 1737") |> # no-break space
+  sub(pattern = "quaedam", replacement = "quædam")
+```
+
+And finally, standardize markdown formatting and style.
+
+
+``` r
+source_md <- to_tidy_md(source_md, "markdown")
+```
+
+
