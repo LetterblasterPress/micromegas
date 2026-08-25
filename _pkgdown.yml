@@ -5,6 +5,9 @@ reference:
   - title: "Micromégas text"
     contents:
       - source_text
+  - title: "Typesetting tools"
+    contents:
+      - typesetting_assets
   - title: "Internal functions"
     desc: >
       The following functions are not exported but are available to developers

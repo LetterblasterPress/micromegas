@@ -1,0 +1,204 @@
+%!TEX TS-program=LuaLaTeX
+%!TEX encoding=UTF-8 Unicode
+
+\documentclass[11pt, fullptlayout, $if(draft)$draft$else$final$endif$]{memoir}
+\usepackage[english]{babel}
+
+% LAYOUT
+\setlength{\onelineskip}{$leading$pt}
+\setlength{\baselineskip}{\onelineskip}
+\setstocksize{$page_height$in}{$page_width$in}
+\settrimmedsize{\stockheight}{\stockwidth}{*}
+\settypeblocksize{$line_count$\onelineskip}{$text_width$in}{*}
+\setlrmargins{$i_mar$in}{*}{*}
+\setulmargins{$t_mar$in}{*}{*}
+\setheadfoot{\onelineskip}{2\onelineskip}
+\setheaderspaces{*}{\onelineskip}{*}
+\setlength{\topskip}{\onelineskip}
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{$parindent$pt}
+\checkandfixthelayout[lines]
+\raggedbottom
+\frenchspacing
+
+% PENALTIES
+
+%% amount added to badness of every line in a paragraph
+\linepenalty=$if(linepenalty)$$linepenalty$$else$10$endif$
+
+%% penalty for line break after discretionary hyphen
+\hyphenpenalty=$if(hyphenpenalty)$$hyphenpenalty$$else$50$endif$
+
+%% penalty for line break after explicit hyphen
+\exhyphenpenalty=$if(exhyphenpenalty)$$exhyphenpenalty$$else$50$endif$
+
+%% penalty for consecutive hyphens
+\doublehyphendemerits=$if(doublehyphendemerits)$$doublehyphendemerits$$else$10000$endif$
+
+%% additional penalty for page break between lines
+\interlinepenalty=$if(interlinepenalty)$$interlinepenalty$$else$5$endif$
+
+%% penalty for creating a club line at bottom of page
+\clubpenalty=$if(clubpenalty)$$clubpenalty$$else$150$endif$
+
+%% penalty for creating a widow line at top of page
+\widowpenalty=$if(widowpenalty)$$widowpenalty$$else$150$endif$
+
+%% penalty for page break after a hyphenated line
+\brokenpenalty=$if(brokenpenalty)$$brokenpenalty$$else$100$endif$
+
+%% acceptable badness for a paragraph set without hyphenation
+\pretolerance=$if(pretolerance)$$pretolerance$$else$100$endif$
+
+%% acceptable badness for a paragraph re-set with hyphenation
+\tolerance=$if(tolerance)$$tolerance$$else$200$endif$
+
+%% amount of overfull that can be ignored
+\hfuzz=$if(hfuzz)$$hfuzz$$else$0$endif$pt
+
+%% amount of extra space added to each line during re-setting
+\setlength\emergencystretch{$if(emergencystretch)$$emergencystretch$$else$0$endif$pt}
+
+% INCLUDES
+$for(header-includes)$
+$header-includes$
+$endfor$
+
+% TYPOGRAPHY
+\usepackage[quiet]{fontspec}
+\defaultfontfeatures{%
+  Alternate={2},% modified em-dash
+  Ligatures={Common, TeX},%
+  Numbers={Proportional, OldStyle},%
+  WordSpace={$if(ws)$$ws$$else$1.001327$endif$, $if(ws_stretch)$$ws_stretch$$else$0.552792$endif$, $if(ws_shrink)$$ws_shrink$$else$0.921620$endif$}}
+\setmainfont{CentaurMH.ttc}[%
+  UprightFeatures={FontIndex=0},%
+  ItalicFeatures={FontIndex=3},%
+  BoldFeatures={FontIndex=2},%
+  BoldItalicFeatures={FontIndex=1}]
+\newlength\parindentProtrusion
+\setlength\parindentProtrusion{$if(parindent_protrusion)$$parindent_protrusion$$else$0$endif$pt}
+\newcommand{\punctParindentProtrusion}{\hspace*{-\parindentProtrusion}}
+
+% TYPOGRAPHY MACROS
+\newcommand{\smallcaps}[1]{{%
+  \addfontfeature{Letters={SmallCaps}} #1}}
+\newcommand{\allsc}[1]{{%
+  \addfontfeature{Letters={SmallCaps, UppercaseSmallCaps}} #1}}
+\newcommand{\allcaps}[1]{{%
+  \addfontfeature{Letters=Uppercase, Numbers=Lining, Kerning=Uppercase}%
+  \MakeTextUppercase{#1}}}
+
+% HEADINGS
+\setsecnumdepth{book}
+\renewcommand{\clearforchapter}{}
+\renewcommand{\printchaptertitle}[1]{%
+  \centering%
+  \normalfont\normalsize\setlength{\baselineskip}{\onelineskip}%
+  \addfontfeature{LetterSpace=4}%
+  $if(loose_headings)$\allcaps{#1}$else$\allsc{#1}$endif$}
+\setlength{\beforechapskip}{0\onelineskip}
+\setlength{\afterchapskip}{$if(loose_headings)$1$else$0$endif$\onelineskip}
+\newcommand{\chApre}{\vspace*{$if(ch1pre)$$ch1pre$$else$0$endif$\onelineskip}}
+\newcommand{\chBpre}{\vspace*{$if(ch2pre)$$ch2pre$$else$0$endif$\onelineskip}}
+\newcommand{\chCpre}{\vspace*{$if(ch3pre)$$ch3pre$$else$0$endif$\onelineskip}}
+\newcommand{\chDpre}{\vspace*{$if(ch4pre)$$ch4pre$$else$0$endif$\onelineskip}}
+\newcommand{\chEpre}{\vspace*{$if(ch5pre)$$ch5pre$$else$0$endif$\onelineskip}}
+\newcommand{\chFpre}{\vspace*{$if(ch6pre)$$ch6pre$$else$0$endif$\onelineskip}}
+\newcommand{\chGpre}{\vspace*{$if(ch7pre)$$ch7pre$$else$0$endif$\onelineskip}}
+\newcommand{\chApost}{\vspace*{$if(ch1post)$$ch1post$$else$0$endif$\onelineskip}}
+\newcommand{\chBpost}{\vspace*{$if(ch2post)$$ch2post$$else$0$endif$\onelineskip}}
+\newcommand{\chCpost}{\vspace*{$if(ch3post)$$ch3post$$else$0$endif$\onelineskip}}
+\newcommand{\chDpost}{\vspace*{$if(ch4post)$$ch4post$$else$0$endif$\onelineskip}}
+\newcommand{\chEpost}{\vspace*{$if(ch5post)$$ch5post$$else$0$endif$\onelineskip}}
+\newcommand{\chFpost}{\vspace*{$if(ch6post)$$ch6post$$else$0$endif$\onelineskip}}
+\newcommand{\chGpost}{\vspace*{$if(ch7post)$$ch7post$$else$0$endif$\onelineskip}}
+\newcommand{\reflowepiC}{$if(reflow_epi_3)$\\$else$ $endif$}
+\newcommand{\reflowepiE}{$if(reflow_epi_5)$\\$else$ $endif$}
+
+% ENVIRONMENTS
+\usepackage{noindentafter}
+
+\renewenvironment{epigraph}{\centering\itshape\addfontfeature{Ligatures=Discretionary}}{}
+\NoIndentAfterEnv{epigraph}
+
+\newenvironment{aristotle}{%
+  \vspace{$if(aristotle_space)$$aristotle_space$$else$0$endif$\onelineskip}\centering\itshape\addfontfeature{Ligatures=Discretionary}}{%
+  \vspace{$if(aristotle_space)$$aristotle_space$$else$0$endif$\onelineskip}}
+
+\newenvironment{closing}{%
+  \vspace{$if(closing_space)$$closing_space$$else$0$endif$\onelineskip}%
+  \centering\addfontfeature{Letters={SmallCaps, UppercaseSmallCaps}}}{}
+
+% FOLIOS
+\makeevenfoot{plain}{\thepage}{}{}
+\makeoddfoot{plain}{}{}{\thepage}
+\aliaspagestyle{chapter}{plain}
+\pagestyle{plain}
+
+% HYPHENATION (leave 2+ characters behind; take 3+ characters forward)
+\hyphenation{ac-a-demic}
+\hyphenation{ac-ad-emy}
+\hyphenation{con-tempt-i-ble}
+\hyphenation{Cre-a-tor}
+\hyphenation{cre-du-lity}
+\hyphenation{im-ag-i-na-tion}
+\hyphenation{Leib-nitz-ian}
+\hyphenation{Leu-wen-hoek}
+\hyphenation{med-i-o-cre}
+\hyphenation{Mi-cro-megas}
+\hyphenation{No-where}
+\hyphenation{phi-los-o-pher}
+\hyphenation{phi-los-o-phers}
+\hyphenation{phil-o-soph-i-cal}
+\hyphenation{prop-o-si-tion}
+\hyphenation{prop-o-si-tions}$if(hyphenate_responded)$
+\hyphenation{re-spon-ded} % sic$else$$endif$
+\hyphenation{ri-dic-u-lous}
+\hyphenation{riv-u-lets}
+\hyphenation{Sat-urn-ian}
+\hyphenation{Sat-urn}
+\hyphenation{Sir-ian}
+\hyphenation{Sir-ius}
+\hyphenation{tell-ing}
+\hyphenation{will-power}
+\hyphenation{witch-craft}
+
+% DOCUMENT
+\begin{document}
+\setlength{\baselineskip}{\onelineskip}
+
+\frontmatter
+
+$if(title_page)$
+\begin{titlingpage}
+\begin{vplace}
+\calccentering{\unitlength}
+\begin{adjustwidth*}{\unitlength}{-\unitlength}
+\centering
+
+{\Large\setlength{\baselineskip}{\onelineskip}%
+  \addfontfeature{LetterSpace=7}\allcaps{$title$}}
+
+\vspace{\onelineskip}
+{\normalsize\setlength{\baselineskip}{\onelineskip}%
+  \allcaps{$author$}}
+
+\vspace{5\onelineskip}
+{\small\setlength{\baselineskip}{\onelineskip}%
+  {\itshape Translated by \par $translator$}}
+
+\vspace{8\onelineskip}
+{\normalsize\setlength{\baselineskip}{\onelineskip}%
+  {\scshape Letterblaster Press} \par \allsc{MMXXVI}}
+
+\end{adjustwidth*}
+\end{vplace}
+\end{titlingpage}
+$endif$
+
+\mainmatter
+
+$body$
+
+\end{document}
