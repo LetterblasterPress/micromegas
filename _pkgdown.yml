@@ -20,3 +20,4 @@ articles:
     contents:
       - source_text_md
       - source_text_md_tex
+      - source_text_analysis

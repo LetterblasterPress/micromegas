@@ -9,6 +9,9 @@ library(knitr)
 "vignettes/source_text_md_tex.Rmd.orig" |>
   knit(output = "vignettes/source_text_md_tex.Rmd")
 
+"vignettes/source_text_analysis.Rmd.orig" |>
+  knit(output = "vignettes/source_text_analysis.Rmd")
+
 if (dir_exists("figure")) {
   dir_copy("figure", "vignettes/figure", overwrite = TRUE)
   dir_delete("figure")

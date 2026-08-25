@@ -1,0 +1,27 @@
+---
+title: "Text analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Text analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook identifies proper nouns that appear in Micromégas frequently
+> enough to warrant custom hyphenation rules.
+
+
+
+
+
+Table: Frequency of common proper nouns
+
+|           | percentile|
+|:----------|----------:|
+|Micromegas |       96.1|
+|Sirian     |       95.4|
+|Saturn     |       94.2|
+|Saturnian  |       92.2|
+|Sirius     |       90.2|
+
+
