@@ -5,10 +5,10 @@ reference:
   - title: "Micromégas text"
     contents:
       - source_text
-  - title: "Developer tools"
+  - title: "Internal functions"
     desc: >
-      The following functions are intended to streamline common tasks for
-      package developers. They are not exported for use by typical package users.
+      The following functions are not exported but are available to developers
+      for package maintenance.
     contents:
       - inst
       - dev

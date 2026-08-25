@@ -2,7 +2,7 @@
 % Please edit documentation in R/dev.R
 \name{dev}
 \alias{dev}
-\title{Open an R file and its corresponding test file (internal function)}
+\title{Open an R file and its corresponding test file}
 \usage{
 dev(name)
 }

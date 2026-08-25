@@ -1,4 +1,4 @@
-#' Find paths to package files (internal function)
+#' Find paths to package files
 #'
 #' R packages may include arbitrary files such as drivers and templates that are
 #' installed alongside the code itself. This function is a simple wrapper to
@@ -18,7 +18,7 @@ inst <- function(...) {
   system.file(..., package = "micromegas")
 }
 
-#' Open an R file and its corresponding test file (internal function)
+#' Open an R file and its corresponding test file
 #'
 #' An opinionated wrapper function that calls [usethis::use_r()] and
 #' [usethis::use_test()].
@@ -30,7 +30,7 @@ dev <- function(name) {
   invisible(usethis::use_r(name) && usethis::use_test(name))
 }
 
-#' Run code quality checks (internal function)
+#' Run code quality checks
 #'
 #' This function runs a sequence of code quality checks. You are encouraged to
 #' run this function as you develop, but at a minimum you should run it before

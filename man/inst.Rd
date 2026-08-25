@@ -2,7 +2,7 @@
 % Please edit documentation in R/dev.R
 \name{inst}
 \alias{inst}
-\title{Find paths to package files (internal function)}
+\title{Find paths to package files}
 \usage{
 inst(...)
 }

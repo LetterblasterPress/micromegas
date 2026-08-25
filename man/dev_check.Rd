@@ -2,7 +2,7 @@
 % Please edit documentation in R/dev.R
 \name{dev_check}
 \alias{dev_check}
-\title{Run code quality checks (internal function)}
+\title{Run code quality checks}
 \usage{
 dev_check()
 }

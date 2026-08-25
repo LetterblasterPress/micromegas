@@ -26,7 +26,7 @@ INST_PATH <- path(rprojroot::find_package_root_file(), "inst")
 Download source text from Project Gutenberg and convert it from HTML to
 Markdown.
 
-```{r pg_download, cache=TRUE}
+```{r pg_download, cache = TRUE}
 html_dir <- dir_create(file_temp("source_html_"))
 on.exit(unlink(html_dir))
 
