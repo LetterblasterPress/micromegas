@@ -52,21 +52,6 @@ found, a user confirmation is required before updating the custom dictionary;
 otherwise an error is thrown.
 }
 
-\subsection{About \emph{vignettes-raw}}{
-
-\code{\link[pkgdown:build_site]{pkgdown::build_site()}} generates a documentation site for your package,
-including an "Articles" section that contains rendered package vignettes.
-This works great for simple demos, but \code{\link[pkgdown:build_site]{pkgdown::build_site()}} re-renders
-every R Markdown vignette when building the site, making it impractical for
-long-running vignettes or when code requires specific resources. This
-function introduces the concept of a \emph{vignettes-raw} subdirectory as a place for
-notebooks and R Markdown documents that are only run manually.
-
-To enable this feature, simply render R Markdown documents in \emph{vignettes-raw}
-with \code{keep_md: true}. When you are ready to "publish", simply check in the
-rendered \verb{*.md} file (plus any supporting files) into source control.
-}
-
 \subsection{Coverage reports}{
 
 If a \code{file} is specified, a coverage report will be generated for that file.

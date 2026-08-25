@@ -98,20 +98,6 @@ dev_check <- function() {
 #' found, a user confirmation is required before updating the custom dictionary;
 #' otherwise an error is thrown.
 #'
-#' ## About *vignettes-raw*
-#'
-#' [pkgdown::build_site()] generates a documentation site for your package,
-#' including an "Articles" section that contains rendered package vignettes.
-#' This works great for simple demos, but [pkgdown::build_site()] re-renders
-#' every R Markdown vignette when building the site, making it impractical for
-#' long-running vignettes or when code requires specific resources. This
-#' function introduces the concept of a *vignettes-raw* subdirectory as a place for
-#' notebooks and R Markdown documents that are only run manually.
-#'
-#' To enable this feature, simply render R Markdown documents in *vignettes-raw*
-#' with `keep_md: true`. When you are ready to "publish", simply check in the
-#' rendered `*.md` file (plus any supporting files) into source control.
-#'
 #' ## Coverage reports
 #'
 #' If a `file` is specified, a coverage report will be generated for that file.
