@@ -9,6 +9,9 @@ library(knitr)
 "vignettes/source_text_md_tex.Rmd.orig" |>
   knit(output = "vignettes/source_text_md_tex.Rmd")
 
+"vignettes/source_text_regexes.Rmd.orig" |>
+  knit(output = "vignettes/source_text_regexes.Rmd")
+
 "vignettes/source_text_analysis.Rmd.orig" |>
   knit(output = "vignettes/source_text_analysis.Rmd")
 

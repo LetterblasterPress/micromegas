@@ -29,3 +29,26 @@ source_text <- function(format = c("md", "md+tex")) {
 
   readLines(inst("source_text", file_name))
 }
+
+#' A table of source text regular expressions
+#'
+#' This table contains reverse engineered regular expressions to indicate if a
+#' line is indented and to match chapter headings & other formatted blocks.
+#'
+#' @format A [tibble][tibble::tibble-package] of regular expressions and logical indicators
+#' \describe{
+#'   \item{chapter}{logical indicating if line matches a chapter heading}
+#'   \item{epigraph}{logical indicating if line matches a chapter epigraph}
+#'   \item{quotation}{logical indicating if line matches a quotation}
+#'   \item{closing}{logical indicating if line matches the closing line}
+#'   \item{first_line}{logical indicating if line matches the first line of a regular paragraph}
+#'   \item{first_line_chapter}{logical indicating if line matches the first line of a chapter}
+#'   \item{indented}{logical indicating if line is indented}
+#'   \item{regex}{a character vector of regular expressions for each line}
+#' }
+#'
+#' @seealso `vignette("source_text_regexes")`
+#'
+#' @examples
+#' str(source_text_regexes)
+"source_text_regexes"

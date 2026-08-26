@@ -1,0 +1,112 @@
+---
+title: "Source text regular expressions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Source text regular expressions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> The purpose of this notebook is to reverse engineer regular expressions to
+> identify special formatting environments and indented lines.
+
+
+
+
+``` r
+source_text_regexes <- tibble(
+  text = source_text("md") |>
+    to_tidy_md("markdown", to = "markdown", "--columns=9999"),
+  environment = if_else(
+    grepl("^::: \\{\\.", lag(text)) %in% TRUE,
+    sub("^::: \\{\\.(.+) .+$", "\\1", lag(text)),
+    NA
+  )
+) |>
+  filter(!text %in% "", !grepl("^:::", text)) |>
+  transmute(
+    chapter = grepl("^# Chapter", text),
+    epigraph = environment %in% "epigraph",
+    quotation = environment %in% "aristotle",
+    closing = environment %in% "closing",
+    first_line = !chapter & is.na(environment),
+    first_line_chapter = lag(epigraph) %in% TRUE,
+    indented = first_line & !first_line_chapter,
+    regex = stringi::stri_trim(text) |>
+
+      # limit regular expressions to first five words of line
+      strsplit(" ") |>
+      map(head, n = 5) |>
+      map_chr(paste, collapse = " ") |>
+
+      # remove markdown formatting
+      gsub(pattern = "^#+ +", replacement = "") |>
+      gsub(pattern = "\\*", replacement = "") |>
+
+      # match all kinds of quotes
+      gsub(pattern = "'", replacement = "SINGLEQUOTE") |>
+      gsub(pattern = '"', replacement = "DOUBLEQUOTE") |>
+      gsub(pattern = " +(SINGLEQUOTE|DOUBLEQUOTE)", replacement = " *\\1") |>
+      gsub(pattern = "(SINGLEQUOTE|DOUBLEQUOTE) +", replacement = "\\1 *") |>
+      gsub(pattern = "SINGLEQUOTE", replacement = "('|‘|’|`)") |>
+      gsub(pattern = "DOUBLEQUOTE", replacement = "(\"|“|”|``|'')") |>
+
+      # match all kinds of dashes
+      gsub(pattern = "[-–—]{2,3}", replacement = "[-–—]+") |>
+
+      # match literal period & question mark
+      gsub(fixed = TRUE, pattern = ".", replacement = "\\.") |>
+      gsub(fixed = TRUE, pattern = "?", replacement = "\\?") |>
+
+      # match diphthongs
+      sub(pattern = "qu[ae|æ]dam", replacement = "qu[ae|æ]dam") |>
+
+      # ignore space for initial cap
+      sub(pattern = "^O *(n one|N ONE)", replacement = "O *(n one|N ONE)") |>
+
+      # ignore space before French-style punctuation
+      gsub(pattern = " *(:|;|!|\\?)", replacement = " *\\1"),
+
+    # prepare regular expression
+    regex = if_else(
+      chapter | closing,
+      sprintf("(%s|%s|%s)", regex, toupper(regex), tolower(regex)),
+      regex
+    ),
+    regex = if_else(chapter, paste0(regex, "$"), regex),
+    regex = paste0("^", regex),
+
+    # make special expressions for epigraphs, which may be broken across lines
+    regex = regex |>
+      sub(
+        fixed = TRUE, pattern = "^Voyage of an inhabitant of",
+        replacement = "^(Voyage of an inhabitant of the Sirius star|to the planet Saturn\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^Conversation between the inhabitant of",
+        replacement = "^(Conversation between the inhabitant|of Sirius and that of Saturn\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^Voyage of the two inhabitants",
+        replacement = "^(Voyage of the two inhabitants of Sirius and Saturn\\.|Voyage of the two inhabitants|of Sirius and Saturn\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^What happened on planet Earth\\.",
+        replacement = "^(What happened on planet Earth\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^Experiments and reasonings of the",
+        replacement = "^(Experiments and reasonings of the two voyagers\\.|Experiments and reasonings|of the two voyagers\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^What happened to them among",
+        replacement = "^(What happened to them among men\\.)$"
+      ) |>
+      sub(
+        fixed = TRUE, pattern = "^Conversation with the men\\.",
+        replacement = "^(Conversation with the men\\.)$"
+      )
+  )
+```
+
+
