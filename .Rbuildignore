@@ -8,4 +8,5 @@
 ^micromegas\.Rproj$
 ^pkgdown$
 ^scratch$
+^vignettes/figure$
 ^vignettes/precompile\.R$

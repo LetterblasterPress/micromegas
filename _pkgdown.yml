@@ -8,6 +8,7 @@ reference:
       - source_text_regexes
   - title: "Typesetting tools"
     contents:
+      - layout_candidates
       - typesetting_assets
   - title: "Internal functions"
     desc: >
@@ -26,3 +27,7 @@ articles:
       - source_text_regexes
       - source_text_analysis
       - source_text_md_tex
+  - title: "Book design"
+    navbar: "Book design"
+    contents:
+      - layout_candidates

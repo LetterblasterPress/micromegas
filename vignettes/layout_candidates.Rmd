@@ -1,0 +1,281 @@
+---
+title: "Layout candidates"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Layout candidates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook enumerates all layout candidates that are suitable for a book
+> set in 11-point *Centaur*. Each candidate defines:
+>
+> - a whole-pica text width that yields 44--66 characters per line
+> - a whole-line text height that yields a harmoniously proportioned text block
+> - page dimensions and margins that yield harmonious proportions for all
+>   rectangles of positive & negative space on the two-page spread
+
+
+
+Since this book will be typeset in metal using 11-point type on a 12-point body,
+the textblock height must be a multiple of 12 points[^1]. The textblock width
+should run 44--66 characters per line, and physical limitations of the composing
+stick require the width to be a multiple of whole picas. If we require the
+textblock to have "harmonious" proportions, then there are only 30 possible
+textblocks to consider.
+
+[^1]: Initial proofs ruled out a 13-point baseline as too loose for such
+    relatively narrow columns of text.
+
+
+``` r
+textblock_candidates <- expand_grid(
+
+  # consider full-pica text widths that yield 44-66 characters per line
+  text_width = list(min_width = 44, max_width = 66) |>
+    map(estimate_line_length, font = "Centaur MT Pro", fontsize = "11pt") |>
+    map(~ 72.27 * .["mean"]) |>
+    with(list(
+      from = floor(min_width / 12) * 12,
+      to = ceiling(max_width / 12) * 12,
+      by = 12
+    )) |>
+    do.call(what = seq),
+
+  # consider harmonious textblock ratios
+  text_ratio = as.numeric(ratios[ratios > 1 & ratios <= 2])
+) |>
+
+  # limit to textblocks with a 12-point baseline skip
+  mutate(text_height = text_width * text_ratio) |>
+  filter((text_height %% 12) == 0) |> # limit to 12-point baseline skip
+
+  # tidy up
+  transmute(
+    text_width = text_width / 72.27,
+    text_height = text_height / 72.27,
+    text_width_picas = 72.27 * text_width / 12,
+    text_height_lines = 72.27 * text_height / 12,
+    text_ratio = name_ratios(text_ratio)
+  )
+```
+
+<img src="figure/textblock_candidates_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+For each textblock candidate, consider a range of page sizes that pad the
+textblock with 4--12 picas of horizontal space and 5--12 lines of vertical space
+for margins. This grid search discretizes page dimensions to the nearest 0.001
+inch, then filters down to candidates with harmonious one-page and two-page
+dimensions plus wider candidates within 0.01° of the ideal ratio. This
+redundancy will be eliminated later.
+
+
+``` r
+page_candidates <- textblock_candidates |>
+  mutate(
+    page_candidates = map2(text_width, text_height, function(w, h) {
+      expand_grid(
+
+        # consider page widths with 4-12 picas added for horizontal margins
+        page_width = seq(
+          round_any(w + 4 * 12 / 72.27, 0.001, floor),
+          round_any(w + 12 * 12 / 72.27, 0.001, ceiling),
+          by = 0.001
+        ),
+
+        # consider page heights with 5-12 lines added for vertical margins
+        page_height = seq(
+          round_any(h + 5 * 12 / 72.27, 0.001, floor),
+          round_any(h + 12 * 12 / 72.27, 0.001, ceiling),
+          by = 0.001
+        )
+      ) |>
+        mutate(
+          page_ratio = as.numeric(round_ratios(
+            w = page_width,
+            h = page_height,
+            target = "wider"
+          ))
+        ) |>
+        drop_na() |>
+        mutate(
+          page_2up_ratio = as.numeric(round_ratios(
+            w = 2 * page_width,
+            h = page_height,
+            target = "wider"
+          ))
+        ) |>
+        drop_na()
+    })
+  ) |>
+  unnest(page_candidates)
+```
+
+Both the bottom:top and outer:inner margin ratios should lock into harmonious
+proportions greater than one but no more than two, yielding
+144 possible margin ratio pairs. For each page
+candidate, consider each of these textblock placements and filter down to those
+that serendipitously produce harmonious ratios for all resulting rectangles of
+positive & negative space on the two-page spread. Again, a tolerance of ±0.01°
+results in some redundancy that will be eliminated in the next step.
+
+
+``` r
+margin_candidates <- expand_grid(
+  bt_ratio = as.numeric(ratios[ratios > 1 & ratios <= 2]),
+  oi_ratio = as.numeric(ratios[ratios > 1 & ratios <= 2])
+) |>
+  mutate(
+    margins = map2(bt_ratio, oi_ratio, function(bt, oi) {
+      page_candidates |>
+        mutate(
+          b_mar = (page_height - text_height) * (bt / (1 + bt)),
+          t_mar = (page_height - text_height) * (1 / (1 + bt)),
+          o_mar = (page_width - text_width) * (oi / (1 + oi)),
+          i_mar = (page_width - text_width) * (1 / (1 + oi)),
+          text_2up_ratio = round_ratios(
+            w = 2 * (text_width + i_mar),
+            h = text_height
+          )
+        ) |>
+        drop_na() |>
+        mutate(
+          ot_ratio = round_ratios(w = o_mar, h = t_mar),
+          ob_ratio = round_ratios(w = o_mar, h = b_mar),
+          ti_ratio = round_ratios(w = i_mar, h = t_mar),
+          bi_ratio = round_ratios(w = i_mar, h = b_mar),
+          oii_ratio = round_ratios(o_mar, 2 * i_mar),
+          tii_ratio = round_ratios(t_mar, 2 * i_mar),
+          bii_ratio = round_ratios(b_mar, 2 * i_mar)
+        ) |>
+        drop_na() |>
+        mutate(across(where(is.numeric), as.numeric))
+    })
+  ) |>
+  unnest(margins) |>
+  select(
+    starts_with("page"),
+    starts_with("text"),
+    ends_with("mar"),
+    everything()
+  ) |>
+  select(
+    -ends_with("ratio"),
+    everything()
+  )
+```
+
+For each candidate, calculate the error for each rectangle of positive &
+negative space on the two-page spread, then sum errors to estimate the
+percentage of the total page area that is out of harmony. Filter down to
+candidates with less than 10% total error, and eliminate redundant candidates
+favoring the layout with the least error. Finally, filter out layouts with
+extreme margins.
+
+
+``` r
+layout_candidates <- margin_candidates |>
+  mutate(
+
+    # page area over two-page spread
+    page_area_expected = 2 * mean(c(
+      page_width^2 * page_ratio,
+      page_height^2 / page_ratio
+    )),
+    page_area_actual = 2 * page_width * page_height,
+
+    page_2up_area_expected = mean(c(
+      (2 * page_width)^2 * page_2up_ratio,
+      page_height^2 / page_2up_ratio
+    )),
+    page_2up_area_actual = 2 * page_width * page_height,
+
+    # text area over two-page spread
+    text_2up_area_expected = mean(c(
+      (2 * (text_width + i_mar))^2 * text_2up_ratio,
+      text_height^2 / text_2up_ratio
+    )),
+    text_2up_area_actual = 2 * (text_width + i_mar) * text_height,
+
+    # margin rectangles over two-page spread
+    ot_area_expected = 2 * mean(c(o_mar^2 / ot_ratio, t_mar^2 * ot_ratio)),
+    ot_area_actual = 2 * o_mar * t_mar,
+    ob_area_expected = 2 * mean(c(o_mar^2 / ob_ratio, b_mar^2 * ob_ratio)),
+    ob_area_actual = 2 * o_mar * b_mar,
+    ti_area_expected = 2 * mean(c(t_mar^2 / ti_ratio, i_mar^2 * ti_ratio)),
+    ti_area_actual = 2 * t_mar * i_mar,
+    bi_area_expected = 2 * mean(c(b_mar^2 / bi_ratio, i_mar^2 * bi_ratio)),
+    bi_area_actual = 2 * b_mar * i_mar,
+    tii_area_expected = mean(c(t_mar^2 / tii_ratio, (2 * i_mar)^2 * tii_ratio)),
+    tii_area_actual = t_mar * (2 * i_mar),
+    bii_area_expected = mean(c(b_mar^2 / bii_ratio, (2 * i_mar)^2 * bii_ratio)),
+    bii_area_actual = b_mar * (2 * i_mar)
+  ) |>
+  mutate( # account for overlap
+    across(matches("^page_(2up_)?area"), ~ . / 2),
+    across(matches("^[tb]ii?_area"), ~ . / 2)
+  ) |>
+  pivot_longer(matches("expected|actual$")) |>
+  separate_wider_delim(name, "_area_", names = c("area_name", "name")) |>
+  pivot_wider() |>
+  mutate(error = abs(actual - expected)) |>
+  summarise(.by = names(margin_candidates), error = sum(error)) |>
+  mutate(
+    across(ends_with("ratio"), function(x) {
+      y <- x
+      if (is.numeric(x)) y <- name_ratios(x)
+      factor(y, levels = names(sort(ratios)))
+    }),
+    text_pct = (text_width * text_height) / (page_width * page_height),
+    error = error / (2 * page_width * page_height) # as percentage of 2-up area
+  ) |>
+  slice_min(
+    n = 1,
+    by = c("text_width", "text_height", "page_ratio"),
+    order_by = error
+  ) |>
+  filter(
+    error < 0.1,
+    between(72.27 * b_mar / 12, 3, 6),
+    between(72.27 * t_mar / 12, 2, 5),
+    between(72.27 * o_mar / 12, 2, 6),
+    between(72.27 * i_mar / 12, 2, 5),
+    ratios[as.character(ob_ratio)] <= 1
+  ) |>
+  arrange(text_ratio, page_ratio, text_pct) |>
+  mutate(layout_id = row_number(), across(where(is.factor), droplevels)) |>
+  relocate(layout_id) |>
+  relocate(error, .after = everything())
+```
+
+<img src="figure/layout_candidates_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+
+
+|                  |1                 |2                 |3                 |4                 |5              |6                 |7                 |
+|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:--------------|:-----------------|:-----------------|
+|text_ratio        |minor 3rd         |major 3rd         |fifth             |fifth             |major 7th      |octave            |octave            |
+|text_width        |3.320880          |3.320880          |2.988792          |2.988792          |2.656704       |2.490660          |2.656704          |
+|text_height       |3.985056          |4.151100          |4.483188          |4.483188          |4.981320       |4.981320          |5.313408          |
+|text_width_picas  |20                |20                |18                |18                |16             |15                |16                |
+|text_height_lines |24                |25                |27                |27                |30             |30                |32                |
+|page_ratio        |major 2nd         |major 2nd         |major 3rd         |fourth            |fifth          |major 6th         |major 6th         |
+|page_width        |4.874             |4.809             |4.732             |4.486             |4.209          |4.047             |4.038             |
+|page_height       |5.483             |5.410             |5.915             |5.980             |6.312          |6.745             |6.730             |
+|page_2up_ratio    |inverse minor 7th |inverse minor 7th |inverse minor 6th |inverse fifth     |inverse fourth |inverse minor 3rd |inverse minor 3rd |
+|text_2up_ratio    |inverse octave    |inverse major 7th |inverse major 6th |inverse minor 6th |inverse fourth |inverse major 3rd |inverse minor 3rd |
+|bt_ratio          |major 3rd         |minor 3rd         |major 7th         |fifth             |octave         |major 2nd         |fifth             |
+|oi_ratio          |fourth            |minor 6th         |fourth            |fifth             |fourth         |fifth             |minor 6th         |
+|ot_ratio          |inverse fourth    |inverse minor 6th |inverse octave    |inverse fifth     |inverse octave |inverse major 2nd |inverse fifth     |
+|ob_ratio          |inverse minor 2nd |inverse fourth    |inverse minor 2nd |unison            |unison         |unison            |unison            |
+|ti_ratio          |unison            |unison            |inverse fifth     |unison            |inverse fifth  |fourth            |minor 2nd         |
+|bi_ratio          |major 3rd         |minor 3rd         |major 3rd         |fifth             |fourth         |fifth             |minor 6th         |
+|oii_ratio         |inverse fifth     |inverse major 3rd |inverse fifth     |inverse fourth    |inverse fifth  |inverse fourth    |inverse major 3rd |
+|tii_ratio         |inverse octave    |inverse octave    |inverse triple    |inverse octave    |inverse triple |inverse fifth     |inverse major 7th |
+|bii_ratio         |inverse minor 6th |inverse major 6th |inverse minor 6th |inverse fourth    |inverse fifth  |inverse fourth    |inverse major 3rd |
+|text_pct          |0.4952037         |0.5298639         |0.4787218         |0.4994847         |0.4981289      |0.4545103         |0.5194395         |
+|error             |4.2%              |6.4%              |7.4%              |2.6%              |4.3%           |5.8%              |5.5%              |
+
+
+
+

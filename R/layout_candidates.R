@@ -1,0 +1,38 @@
+#' A table of layout candidates
+#'
+#' An extensive grid search was performed to identify page layouts that suit the
+#' text font and lock into grids of harmonious proportions derived from musical
+#' chords.
+#'
+#' @format A [tibble][tibble::tibble-package] of layout candidates
+#' \describe{
+#'   \item{layout_id}{layout ID}
+#'   \item{page_width, page_height}{page dimensions in inches}
+#'   \item{text_width, text_height}{textblock dimensions in inches}
+#'   \item{text_width_picas}{textblock width in picas}
+#'   \item{text_height_lines}{textblock line count}
+#'   \item{b_mar, t_mar, o_mar, i_mar}{bottom, top, outer, inner margins in
+#'         inches}
+#'   \item{page_ratio, page_2up_ratio}{ratios describing the shape of the page}
+#'   \item{text_ratio}{ratio describing the shape of the textblock (exact)}
+#'   \item{text_2up_ratio}{ratio describing the rectangle that circumscribes
+#'         both textblocks on a two-page spread (including inner margins)}
+#'   \item{bt_ratio}{ratio of bottom:top margins (exact)}
+#'   \item{oi_ratio}{ratio of outer:inner margins (exact)}
+#'   \item{ot_ratio, ob_ratio, ti_ratio, bi_ratio}{ratios describing the
+#'         rectangles of negative space between the corner of the textblock and
+#'         the corner of the page}
+#'   \item{oii_ratio}{similar to `oi_ratio` but over a two-page spread
+#'         (approximate, but excluded from error calculation because it does not
+#'         describe a rectangle)}
+#'   \item{tii_ratio, bii_ratio}{similar to `ti_ratio` and `bi_ratio` but over
+#'         a two-page spread}
+#'   \item{text_pct}{fraction of the page taken up by the textblock}
+#'   \item{error}{total layout error expressed as a percentage of page area}
+#' }
+#'
+#' @seealso `vignette("layout_candidates")`
+#'
+#' @examples
+#' str(layout_candidates)
+"layout_candidates"
