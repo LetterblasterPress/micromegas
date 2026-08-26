@@ -9,7 +9,7 @@
 \setlength{\baselineskip}{\onelineskip}
 \setstocksize{$page_height$in}{$page_width$in}
 \settrimmedsize{\stockheight}{\stockwidth}{*}
-\settypeblocksize{$line_count$\onelineskip}{$text_width$in}{*}
+\settypeblocksize{$text_height_lines$\onelineskip}{$text_width$in}{*}
 \setlrmargins{$i_mar$in}{*}{*}
 \setulmargins{$t_mar$in}{*}{*}
 \setheadfoot{\onelineskip}{2\onelineskip}
@@ -59,6 +59,9 @@
 %% amount of extra space added to each line during re-setting
 \setlength\emergencystretch{$if(emergencystretch)$$emergencystretch$$else$0$endif$pt}
 
+%% load widows-and-orphans package for better reporting
+\usepackage[check=warning]{widows-and-orphans}
+
 % INCLUDES
 $for(header-includes)$
 $header-includes$
@@ -76,9 +79,6 @@ $endfor$
   ItalicFeatures={FontIndex=3},%
   BoldFeatures={FontIndex=2},%
   BoldItalicFeatures={FontIndex=1}]
-\newlength\parindentProtrusion
-\setlength\parindentProtrusion{$if(parindent_protrusion)$$parindent_protrusion$$else$0$endif$pt}
-\newcommand{\punctParindentProtrusion}{\hspace*{-\parindentProtrusion}}
 
 % TYPOGRAPHY MACROS
 \newcommand{\smallcaps}[1]{{%
