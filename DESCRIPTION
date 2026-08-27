@@ -14,8 +14,10 @@ Depends:
 Imports: 
     covr,
     devtools,
+    dplyr,
     fs,
     pkgdown,
+    purrr,
     rstudioapi,
     styler,
     tibble,

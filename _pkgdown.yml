@@ -9,6 +9,7 @@ reference:
   - title: "Typesetting tools"
     contents:
       - layout_candidates
+      - tidy_params
       - typesetting_assets
   - title: "Internal functions"
     desc: >
