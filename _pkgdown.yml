@@ -32,3 +32,4 @@ articles:
     navbar: "Book design"
     contents:
       - layout_candidates
+      - hj_optimization

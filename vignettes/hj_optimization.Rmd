@@ -1,0 +1,58 @@
+---
+title: "Optimizing hyphenation & justification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optimizing hyphenation & justification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> TODO
+
+
+
+
+``` r
+hj_params <- expand_grid(
+
+  # consider each distinct candidate text width (nested table)
+  layouts = layout_candidates |>
+    arrange(error, desc(text_pct)) |>
+    slice_min(error, by = text_width, n = 1, with_ties = FALSE) |>
+    list(),
+
+  # consider a range of sensible wordspace settings (nested table)
+  ws = expand_grid(
+    ws_avg = seq(11 / 4, 11 / 3, length.out = 3),
+    ws_min = seq(11 / 6, 11 / 5, length.out = 3),
+    ws_max = seq(11 / 3, 11 / 2, length.out = 5)
+  ) |>
+    filter(ws_min < ws_avg, ws_avg < ws_max) |>
+    transmute(
+      ws = ws_avg / 2.94556,
+      ws_stretch = (ws_max - ws_avg) / 1.47278,
+      ws_shrink = (ws_avg - ws_min) / 0.98186
+    ) |>
+    list(),
+
+  # consider a range of harmonious paragraph indentation lengths
+  parindent = c(12, 14, 15, 16, 18, 20),
+
+  # fine-tune LaTeX hyphenation & justification parameters
+  pretolerance = 100, # lower to 0 to skip; increase to 200 to make sloppy
+  tolerance = 200, # increase to 500 or 1000 to make sloppy
+  hfuzz = 0, # increase to 1 to make sloppy
+  emergencystretch = 0, # increase to 0.5 or 1 to make sloppy
+  doublehyphendemerits = 1e5, # 1e4 is too sloppy; increase to 1e6 if needed
+  hyphenate_responded = FALSE, # avoid if possible
+
+  # don't penalize bad page breaks while evaluating H&J
+  interlinepenalty = 0, clubpenalty = 0, widowpenalty = 0, brokenpenalty = 0
+) |>
+  filter(pretolerance < tolerance) |>
+  unnest(layouts) |>
+  unnest(ws) |>
+  distinct()
+```
+
+
