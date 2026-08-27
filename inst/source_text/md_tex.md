@@ -615,8 +615,6 @@ This passage of Aristotle, *On the Soul*, book `\allsc{II}`{=tex}, chapter
 | est quod potentiam habet ut ejusmodi sit. \[Tr.\]
 :::
 
-`\chHpost{}`{=tex}
-
 "I do not understand Greek very well," said the `\mbox{giant.}`{=tex}
 
 "Neither do I," said the philosophical `\mbox{mite.}`{=tex}

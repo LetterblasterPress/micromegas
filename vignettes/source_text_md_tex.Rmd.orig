@@ -53,7 +53,7 @@ Insert optional blank lines after each chapter epigraph.
 
 ```{r}
 source_md_tex <- if_else(
-    lag(source_md_tex) %in% ":::",
+    lag(source_md_tex) %in% ":::" & !grepl("aristotle", lag(source_md_tex, 4)),
     "\n`\\ch%spost{}`{=tex}\n" |>
       sprintf(c("", LETTERS)[1 + cumsum(lead(source_md_tex) %in% ":::")]),
     source_md_tex
