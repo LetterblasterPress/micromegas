@@ -59,9 +59,6 @@
 %% amount of extra space added to each line during re-setting
 \setlength\emergencystretch{$if(emergencystretch)$$emergencystretch$$else$0$endif$pt}
 
-%% load widows-and-orphans package for better reporting
-\usepackage[check=warning]{widows-and-orphans}
-
 % INCLUDES
 $for(header-includes)$
 $header-includes$
