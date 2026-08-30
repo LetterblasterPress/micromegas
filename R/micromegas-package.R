@@ -15,6 +15,7 @@
 #' @importFrom fs file_move
 #' @importFrom fs file_temp
 #' @importFrom fs path
+#' @importFrom fs path_expand
 #' @importFrom pkgdown build_site
 #' @importFrom purrr map_dfr
 #' @importFrom rstudioapi viewer
