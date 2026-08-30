@@ -14,13 +14,17 @@ Depends:
 Imports: 
     covr,
     devtools,
+    digest,
     dplyr,
     fs,
+    pdftools,
     pkgdown,
     purrr,
+    readr,
     rstudioapi,
     styler,
     tibble,
+    tidyr,
     usethis,
     utils,
     yaml
