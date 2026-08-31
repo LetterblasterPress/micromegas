@@ -22,6 +22,8 @@ Imports:
     purrr,
     readr,
     rstudioapi,
+    stats,
+    stringr,
     styler,
     tibble,
     tidyr,
