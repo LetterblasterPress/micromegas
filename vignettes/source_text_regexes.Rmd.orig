@@ -13,6 +13,7 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
+library(letterblasteR)
 library(micromegas)
 library(tidyverse)
 ```
@@ -20,11 +21,12 @@ library(tidyverse)
 ```{r}
 source_text_regexes <- tibble(
   text = source_text("md") |>
-    to_tidy_md("markdown", to = "markdown", "--columns=9999"),
+    to_tidy_md("markdown", to = "markdown", "--columns=9999") |>
+    sub(pattern = "^\\| *", replacement = ""),
   environment = if_else(
     grepl("^::: \\{\\.", lag(text)) %in% TRUE,
     sub("^::: \\{\\.(.+) .+$", "\\1", lag(text)),
-    NA
+    if_else(grepl("Anima|ejusmodi", text), "aristotle", NA)
   )
 ) |>
   filter(!text %in% "", !grepl("^:::", text)) |>
@@ -69,7 +71,8 @@ source_text_regexes <- tibble(
       sub(pattern = "^O *(n one|N ONE)", replacement = "O *(n one|N ONE)") |>
 
       # ignore space before French-style punctuation
-      gsub(pattern = " *(:|;|!|\\?)", replacement = " *\\1"),
+      gsub(pattern = " *(:|;|!|\\?)", replacement = " *\\1") |>
+      gsub(pattern = "\\ *?", replacement = " *\\?", fixed = TRUE),
 
     # prepare regular expression
     regex = if_else(
@@ -84,23 +87,37 @@ source_text_regexes <- tibble(
     regex = regex |>
       sub(
         fixed = TRUE, pattern = "^Voyage of an inhabitant of",
-        replacement = "^(Voyage of an inhabitant of the Sirius star|to the planet Saturn\\.)$"
+        replacement = paste(collapse = "\n", c(
+          "^(Voyage of an inhabitant of the Sirius star)$",
+          "^(to the planet Saturn\\.)$"
+        ))
       ) |>
       sub(
         fixed = TRUE, pattern = "^Conversation between the inhabitant of",
-        replacement = "^(Conversation between the inhabitant|of Sirius and that of Saturn\\.)$"
+        replacement = paste(collapse = "\n", c(
+          "^(Conversation between the inhabitant)$",
+          "^(of Sirius and that of Saturn\\.)$"
+        ))
       ) |>
       sub(
-        fixed = TRUE, pattern = "^Voyage of the two inhabitants",
-        replacement = "^(Voyage of the two inhabitants of Sirius and Saturn\\.|Voyage of the two inhabitants|of Sirius and Saturn\\.)$"
+        fixed = TRUE, pattern = "^Voyage of the two inhabitants", # optional
+        replacement = sprintf("^(%s)$", paste(collapse = "|", c(
+          "Voyage of the two inhabitants of Sirius and Saturn\\.",
+          "Voyage of the two inhabitants",
+          "of Sirius and Saturn\\."
+        )))
       ) |>
       sub(
         fixed = TRUE, pattern = "^What happened on planet Earth\\.",
         replacement = "^(What happened on planet Earth\\.)$"
       ) |>
       sub(
-        fixed = TRUE, pattern = "^Experiments and reasonings of the",
-        replacement = "^(Experiments and reasonings of the two voyagers\\.|Experiments and reasonings|of the two voyagers\\.)$"
+        fixed = TRUE, pattern = "^Experiments and reasonings of the", # optional
+        replacement = sprintf("^(%s)$", paste(collapse = "|", c(
+          "Experiments and reasonings of the two voyagers\\.",
+          "Experiments and reasonings",
+          "of the two voyagers\\."
+        )))
       ) |>
       sub(
         fixed = TRUE, pattern = "^What happened to them among",
@@ -109,7 +126,18 @@ source_text_regexes <- tibble(
       sub(
         fixed = TRUE, pattern = "^Conversation with the men\\.",
         replacement = "^(Conversation with the men\\.)$"
-      )
+      ),
+    regex = strsplit(regex, "\n")
+  ) |>
+  unnest(regex) |>
+  mutate(
+    regex = if_else(
+      epigraph | quotation,
+      regex |>
+        gsub(pattern = "ct", replacement = "(ct)") |> # sic, not in Unicode
+        gsub(pattern = "st", replacement = "(st|ﬆ)"),
+      regex
+    )
   )
 ```
 
