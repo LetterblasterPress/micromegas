@@ -59,6 +59,26 @@ hj_params <- expand_grid(
   distinct()
 ```
 
+```{r hj_proofs, cache = TRUE, dependson = "hj_params"}
+hj_proofs <- map_typeset(hj_params)
+
+hj_proofs <- hj_proofs |>
+  inner_join(
+    hj_proofs |>
+      filter(exception_count == 0, overfull_total == 0, hyphen_run_count == 0) |>
+      with(id) |>
+      map_dfr(analyze_whitespace),
+    by = "id"
+  ) |>
+  filter(word_space_min > 1) |>
+  select(-any_of(setdiff(names(layout_candidates), "text_width"))) |>
+  left_join(layout_candidates, relationship = "many-to-many") |>
+  tidy_params() |>
+  distinct() |>
+  map_typeset() |>
+  filter(exception_count == 0, overfull_total == 0, hyphen_run_count == 0)
+```
+
 ```{r export, include = FALSE}
-# usethis::use_data(hj_proofs, overwrite = TRUE)
+usethis::use_data(hj_proofs, overwrite = TRUE)
 ```
