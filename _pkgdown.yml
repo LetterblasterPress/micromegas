@@ -11,6 +11,7 @@ reference:
       - layout_candidates
       - tidy_params
       - typesetting_assets
+      - typeset
   - title: "Internal functions"
     desc: >
       The following functions are not exported but are available to developers
