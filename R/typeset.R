@@ -76,13 +76,7 @@ typeset <- function(
       system2("lualatex", path_file(tex_path), stdout = FALSE)
     )
 
-    tibble(id, params, log = list(read_lines(log_path))) |>
-      parse_tex_log() |>
-      mutate(
-        type_usage = estimate_type_usage(pdf_path),
-        hyphen_run_count = count_hyphen_runs(pdf_path)
-      ) |>
-      saveRDS(rds_path)
+    saveRDS(tibble(id, params), rds_path)
   }
 
   read_rds(rds_path)
