@@ -45,13 +45,13 @@ typeset <- function(
   pdf_path <- path(proof_dir, id, ext = "pdf")
   rds_path <- path(proof_dir, id, ext = "rds")
   ttc_path <- path(proof_dir, "CentaurMH.ttc")
-  file_copy(inst("CentaurMH.ttc"), ttc_path)
-  on.exit(unlink(ttc_path))
 
   if (!file_exists(rds_path)) {
     write(src, src_path)
     write(c(meta, paste("template:", path_file(template_path))), meta_path)
     write(template, template_path)
+    file_copy(inst("CentaurMH.ttc"), ttc_path)
+    on.exit(unlink(ttc_path))
 
     message("Rendering ", id)
 
