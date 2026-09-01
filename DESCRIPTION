@@ -29,6 +29,7 @@ Imports:
     tidyr,
     usethis,
     utils,
+    withr,
     yaml
 Suggests: 
     knitr,
@@ -38,8 +39,7 @@ Suggests:
     rprojroot,
     spelling,
     testthat (>= 3.0.0),
-    uuid,
-    withr
+    uuid
 VignetteBuilder:
     knitr
 Config/roxygen2/version: 8.1.0

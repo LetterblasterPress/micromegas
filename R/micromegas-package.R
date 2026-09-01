@@ -68,6 +68,7 @@
 #' @importFrom utils capture.output
 #' @importFrom utils head
 #' @importFrom utils tail
+#' @importFrom withr with_dir
 #' @importFrom yaml read_yaml
 ## usethis namespace: end
 NULL

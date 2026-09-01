@@ -55,7 +55,7 @@ typeset <- function(
 
     message("Rendering ", id)
 
-    withr::with_dir(
+    with_dir(
       proof_dir,
       quarto::quarto_render(
         input = path_file(src_path),
@@ -67,11 +67,11 @@ typeset <- function(
       )
     )
 
-    withr::with_dir(
+    with_dir(
       proof_dir,
       system2("lualatex", path_file(tex_path), stdout = FALSE)
     )
-    withr::with_dir(
+    with_dir(
       proof_dir,
       system2("lualatex", path_file(tex_path), stdout = FALSE)
     )
