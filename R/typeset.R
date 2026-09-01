@@ -28,12 +28,12 @@ typeset <- function(
   params <- do.call(tidy_params, params)
 
   # use hash of inputs as a cache ID
-  id <- digest::digest(list(
+  id <- digest(list(
     src = src,
     meta = meta,
     template = template,
     params = params,
-    ttc_id = digest::digest(inst("CentaurMH.ttc"), file = TRUE)
+    ttc_id = digest(inst("CentaurMH.ttc"), file = TRUE)
   ))
 
   proof_dir <- dir_create(proof_path(id))

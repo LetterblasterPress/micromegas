@@ -7,6 +7,7 @@
 #' @importFrom covr package_coverage
 #' @importFrom devtools check
 #' @importFrom devtools document
+#' @importFrom digest digest
 #' @importFrom dplyr across
 #' @importFrom dplyr arrange
 #' @importFrom dplyr bind_rows

@@ -15,6 +15,7 @@ importFrom(devtools,
   check,
   document
 )
+importFrom(digest,digest)
 importFrom(dplyr,
   across,
   arrange,
