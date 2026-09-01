@@ -20,6 +20,7 @@ Imports:
     pdftools,
     pkgdown,
     purrr,
+    quarto,
     readr,
     rstudioapi,
     stats,
@@ -34,7 +35,6 @@ Imports:
 Suggests: 
     knitr,
     mockery,
-    quarto,
     rmarkdown,
     rprojroot,
     spelling,

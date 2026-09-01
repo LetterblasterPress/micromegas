@@ -63,6 +63,7 @@ importFrom(purrr,
   map_dfr,
   map_int
 )
+importFrom(quarto,quarto_render)
 importFrom(readr,
   read_lines,
   read_rds

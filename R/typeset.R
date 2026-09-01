@@ -57,7 +57,7 @@ typeset <- function(
 
     with_dir(
       proof_dir,
-      quarto::quarto_render(
+      quarto_render(
         input = path_file(src_path),
         output_format = "latex",
         output_file = path_file(tex_path),

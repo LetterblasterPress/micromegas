@@ -50,6 +50,7 @@
 #' @importFrom purrr map_dfr
 #' @importFrom purrr map_int
 #' @importFrom purrr map2_lgl
+#' @importFrom quarto quarto_render
 #' @importFrom readr read_lines
 #' @importFrom readr read_rds
 #' @importFrom rstudioapi viewer
