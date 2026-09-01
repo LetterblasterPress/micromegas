@@ -36,7 +36,7 @@ typeset <- function(
     ttc_id = digest::digest(inst("CentaurMH.ttc"), file = TRUE)
   ))
 
-  proof_dir <- dir_create(path(proof_dir, substr(id, 1, 2), substr(id, 3, 4)))
+  proof_dir <- dir_create(proof_path(id))
   src_path <- path(proof_dir, id, ext = "md")
   meta_path <- path(proof_dir, id, ext = "yml")
   template_path <- path(proof_dir, id, ext = "latex")
