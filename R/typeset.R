@@ -1,16 +1,18 @@
-#' TODO
+#' Render a PDF with given inputs and parameters
 #'
-#' TODO
+#' The `typeset()` function renders a PDF using the supplied inputs, caching all
+#' intermediate files in `proofs_dir()`. The `map_typeset()` function can be
+#' used to render multiple PDFs by supplying a data frame of parameters.
 #'
-#' @param params TODO
-#' @param src TODO
-#' @param meta TODO
-#' @param template TODO
-#' @param proof_dir TODO
-#' @param dryrun TODO
+#' @param params typesetting parameters, passed to `tidy_params()`
+#' @param src typesetting source as a character vector of Markdown text
+#' @param meta typesetting metadata as a character vector of (unparsed) YAML
+#' @param template Markdown-to-LaTeX Quarto template as a character vector
+#' @param proof_dir path to proofs directory
+#' @param dryrun if `TRUE`, returns tidied parameters without rendering
 #'
-#' @returns a [tibble][tibble::tibble-package] of tidied typesetting
-#'   parameters plus metrics describing the resulting typesets
+#' @returns a [tibble][tibble::tibble-package] of tidied typesetting parameters
+#'   plus an ID column with the MD5 hash of all typesetting inputs
 #' @export
 #'
 #' @name typeset
@@ -36,6 +38,7 @@ typeset <- function(
     ttc_id = digest(inst("CentaurMH.ttc"), file = TRUE)
   ))
 
+  # define paths for intermediate files
   proof_dir <- dir_create(proof_path(id))
   src_path <- path(proof_dir, id, ext = "md")
   meta_path <- path(proof_dir, id, ext = "yml")
@@ -47,14 +50,16 @@ typeset <- function(
   ttc_path <- path(proof_dir, "CentaurMH.ttc")
 
   if (!file_exists(rds_path)) {
+    message("Rendering ", id)
+
+    # copy inputs
     write(src, src_path)
     write(c(meta, paste("template:", path_file(template_path))), meta_path)
     write(template, template_path)
     file_copy(inst("CentaurMH.ttc"), ttc_path)
     on.exit(unlink(ttc_path))
 
-    message("Rendering ", id)
-
+    # Markdown -> LaTeX
     with_dir(
       proof_dir,
       quarto_render(
@@ -67,6 +72,7 @@ typeset <- function(
       )
     )
 
+    # LaTeX -> PDF (twice to ensure references are correct)
     with_dir(
       proof_dir,
       system2("lualatex", path_file(tex_path), stdout = FALSE)
@@ -76,9 +82,11 @@ typeset <- function(
       system2("lualatex", path_file(tex_path), stdout = FALSE)
     )
 
+    # save
     saveRDS(tibble(id, params), rds_path)
   }
 
+  # read cached results
   read_rds(rds_path)
 }
 

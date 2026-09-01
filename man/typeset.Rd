@@ -3,35 +3,37 @@
 \name{typeset}
 \alias{typeset}
 \alias{map_typeset}
-\title{TODO}
+\title{Render a PDF with given inputs and parameters}
 \usage{
 typeset(
+  params = list(),
   src = source_text("md+tex"),
   meta = typesetting_metadata(),
   template = typesetting_template(),
-  params = list(),
   proof_dir = proofs_dir()
 )
 
 map_typeset(params, dryrun = FALSE)
 }
 \arguments{
-\item{src}{TODO}
+\item{params}{typesetting parameters, passed to \code{tidy_params()}}
 
-\item{meta}{TODO}
+\item{src}{typesetting source as a character vector of Markdown text}
 
-\item{template}{TODO}
+\item{meta}{typesetting metadata as a character vector of (unparsed) YAML}
 
-\item{params}{TODO}
+\item{template}{Markdown-to-LaTeX Quarto template as a character vector}
 
-\item{proof_dir}{TODO}
+\item{proof_dir}{path to proofs directory}
 
-\item{dryrun}{TODO}
+\item{dryrun}{if \code{TRUE}, returns tidied parameters without rendering}
 }
 \value{
-a \link[tibble:tibble-package]{tibble} of tidied typesetting
-parameters plus metrics describing the resulting typesets
+a \link[tibble:tibble-package]{tibble} of tidied typesetting parameters
+plus an ID column with the MD5 hash of all typesetting inputs
 }
 \description{
-TODO
+The \code{typeset()} function renders a PDF using the supplied inputs, caching all
+intermediate files in \code{proofs_dir()}. The \code{map_typeset()} function can be
+used to render multiple PDFs by supplying a data frame of parameters.
 }
