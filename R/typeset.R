@@ -2,10 +2,10 @@
 #'
 #' TODO
 #'
+#' @param params TODO
 #' @param src TODO
 #' @param meta TODO
 #' @param template TODO
-#' @param params TODO
 #' @param proof_dir TODO
 #' @param dryrun TODO
 #'
@@ -19,10 +19,10 @@ NULL
 #' @rdname typeset
 #' @export
 typeset <- function(
+  params = list(),
   src = source_text("md+tex"),
   meta = typesetting_metadata(),
   template = typesetting_template(),
-  params = list(),
   proof_dir = proofs_dir()
 ) {
   params <- do.call(tidy_params, params)
@@ -95,6 +95,6 @@ map_typeset <- function(params, dryrun = FALSE) {
   if (dryrun) {
     return(y)
   } else {
-    map_dfr(split(y, seq(nrow(y))), ~ typeset(params = .))
+    map_dfr(split(y, seq(nrow(y))), typeset)
   }
 }
