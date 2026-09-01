@@ -308,6 +308,7 @@ layout_candidates |>
     error
   ) |>
   mutate(
+    text_pct = sprintf("%.2g%%", 100 * text_pct),
     error = sprintf("%.2g%%", 100 * error),
     across(where(is.factor), as.character),
     across(where(is.numeric), format)

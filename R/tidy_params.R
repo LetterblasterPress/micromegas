@@ -12,7 +12,7 @@
 #' @param `header-includes`
 #'        character vector of additional LaTeX setup code
 #' @param title_page
-#'        logical indicating whether to typeset a title page or not
+#'        logical, whether to typeset a title page or not
 #' @param page_height,page_width
 #'        page dimensions (inches)
 #' @param text_height_lines
@@ -32,16 +32,16 @@
 #' @param parindent
 #'        paragraph indentation (points)
 #' @param hyphenate_responded
-#'        logical indicating whether to accept non-standard hyphenation of the
-#'        word `re-spon-ded`
+#'        logical, whether to accept non-standard hyphenation of the word
+#'        `re-spon-ded`
 #' @param reflow_epi_3,reflow_epi_5
-#'        logical indicating whether to break epigraphs for chapters 3 & 5
+#'        logical, whether to break epigraphs for chapters 3 & 5 over two lines
 #' @param aristotle_space
-#'        blank lines to add above & below Aristotle quotation
+#'        number of blank lines to add above & below Aristotle quotation
 #' @param closing_space
-#'        blank lines before closing environment
+#'        number of blank lines before the closing environment
 #' @param loose_headings
-#'        logical indicating whether to set loose or compact chapter headings
+#'        logical, whether to set loose or compact chapter headings
 #' @param ch1pre,ch2pre,ch3pre,ch4pre,ch5pre,ch6pre,ch7pre
 #'        additional blank lines before each chapter
 #' @param ch1post,ch2post,ch3post,ch4post,ch5post,ch6post,ch7post
@@ -59,7 +59,7 @@
 #'   t_mar = 0.5, i_mar = 0.5
 #' )
 #'
-#' # or a data frame of parameters (extra columns ignored)
+#' # can also pass a data frame of parameters (extra columns ignored)
 #' tidy_params(layout_candidates) |> str()
 tidy_params <- function(
   ...,

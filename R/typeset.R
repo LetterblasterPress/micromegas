@@ -1,13 +1,14 @@
-#' Render a PDF with given inputs and parameters
+#' Render one or more PDFs and cache results locally
 #'
 #' The `typeset()` function renders a PDF using the supplied inputs, caching all
 #' intermediate files in `proofs_dir()`. The `map_typeset()` function can be
-#' used to render multiple PDFs by supplying a data frame of parameters.
+#' used to render many PDFs by supplying a data frame of parameters.
 #'
 #' @param params typesetting parameters, passed to `tidy_params()`
 #' @param src typesetting source as a character vector of Markdown text
 #' @param meta typesetting metadata as a character vector of (unparsed) YAML
-#' @param template Markdown-to-LaTeX Quarto template as a character vector
+#' @param template Quarto template as a character vector, used to convert
+#'   Markdown to LaTeX
 #' @param proof_dir path to proofs directory
 #' @param dryrun if `TRUE`, returns tidied parameters without rendering
 #'
@@ -27,6 +28,7 @@ typeset <- function(
   template = typesetting_template(),
   proof_dir = proofs_dir()
 ) {
+  # nocov start
   params <- do.call(tidy_params, params)
 
   # use hash of inputs as a cache ID
@@ -99,4 +101,6 @@ map_typeset <- function(params, dryrun = FALSE) {
   } else {
     map_dfr(split(y, seq(nrow(y))), typeset)
   }
+
+  # nocov end
 }

@@ -18,8 +18,8 @@ library(knitr)
 "vignettes/layout_candidates.Rmd.orig" |>
   knit(output = "vignettes/layout_candidates.Rmd")
 
-"vignettes/hj_optimization.Rmd.orig" |>
-  knit(output = "vignettes/hj_optimization.Rmd")
+# "vignettes/hj_optimization.Rmd.orig" |>
+#   knit(output = "vignettes/hj_optimization.Rmd")
 
 if (dir_exists("figure")) {
   dir_copy("figure", "vignettes/figure", overwrite = TRUE)

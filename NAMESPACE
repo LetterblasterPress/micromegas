@@ -52,6 +52,7 @@ importFrom(fs,
   path_ext_set,
   path_file
 )
+importFrom(pdftools,pdf_text)
 importFrom(pkgdown,build_site)
 importFrom(purrr,
   imap_dfr,

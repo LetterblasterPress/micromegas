@@ -1,5 +1,8 @@
 #' Retrieve typesetting assets as character vectors
 #'
+#' These functions simply read static typesetting asset files that are installed
+#' by this package.
+#'
 #' @returns A character vector with the requested asset
 #'
 #' @examples

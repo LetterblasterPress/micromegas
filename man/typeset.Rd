@@ -3,7 +3,7 @@
 \name{typeset}
 \alias{typeset}
 \alias{map_typeset}
-\title{Render a PDF with given inputs and parameters}
+\title{Render one or more PDFs and cache results locally}
 \usage{
 typeset(
   params = list(),
@@ -22,7 +22,8 @@ map_typeset(params, dryrun = FALSE)
 
 \item{meta}{typesetting metadata as a character vector of (unparsed) YAML}
 
-\item{template}{Markdown-to-LaTeX Quarto template as a character vector}
+\item{template}{Quarto template as a character vector, used to convert
+Markdown to LaTeX}
 
 \item{proof_dir}{path to proofs directory}
 
@@ -35,5 +36,5 @@ plus an ID column with the MD5 hash of all typesetting inputs
 \description{
 The \code{typeset()} function renders a PDF using the supplied inputs, caching all
 intermediate files in \code{proofs_dir()}. The \code{map_typeset()} function can be
-used to render multiple PDFs by supplying a data frame of parameters.
+used to render many PDFs by supplying a data frame of parameters.
 }

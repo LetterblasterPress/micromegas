@@ -61,7 +61,7 @@ named parameters individually}
 
 \item{header-includes}{character vector of additional LaTeX setup code}
 
-\item{title_page}{logical indicating whether to typeset a title page or not}
+\item{title_page}{logical, whether to typeset a title page or not}
 
 \item{page_height, page_width}{page dimensions (inches)}
 
@@ -81,16 +81,16 @@ named parameters individually}
 
 \item{parindent}{paragraph indentation (points)}
 
-\item{hyphenate_responded}{logical indicating whether to accept non-standard hyphenation of the
-word \code{re-spon-ded}}
+\item{hyphenate_responded}{logical, whether to accept non-standard hyphenation of the word
+\code{re-spon-ded}}
 
-\item{reflow_epi_3, reflow_epi_5}{logical indicating whether to break epigraphs for chapters 3 & 5}
+\item{reflow_epi_3, reflow_epi_5}{logical, whether to break epigraphs for chapters 3 & 5 over two lines}
 
-\item{aristotle_space}{blank lines to add above & below Aristotle quotation}
+\item{aristotle_space}{number of blank lines to add above & below Aristotle quotation}
 
-\item{closing_space}{blank lines before closing environment}
+\item{closing_space}{number of blank lines before the closing environment}
 
-\item{loose_headings}{logical indicating whether to set loose or compact chapter headings}
+\item{loose_headings}{logical, whether to set loose or compact chapter headings}
 
 \item{ch1pre, ch2pre, ch3pre, ch4pre, ch5pre, ch6pre, ch7pre}{additional blank lines before each chapter}
 
@@ -112,6 +112,6 @@ tidy_params(
   t_mar = 0.5, i_mar = 0.5
 )
 
-# or a data frame of parameters (extra columns ignored)
+# can also pass a data frame of parameters (extra columns ignored)
 tidy_params(layout_candidates) |> str()
 }

@@ -273,7 +273,7 @@ layout_candidates <- margin_candidates |>
 |oii_ratio         |inverse fifth     |inverse major 3rd |inverse fifth     |inverse fourth    |inverse fifth  |inverse fourth    |inverse major 3rd |
 |tii_ratio         |inverse octave    |inverse octave    |inverse triple    |inverse octave    |inverse triple |inverse fifth     |inverse major 7th |
 |bii_ratio         |inverse minor 6th |inverse major 6th |inverse minor 6th |inverse fourth    |inverse fifth  |inverse fourth    |inverse major 3rd |
-|text_pct          |0.4952037         |0.5298639         |0.4787218         |0.4994847         |0.4981289      |0.4545103         |0.5194395         |
+|text_pct          |50%               |53%               |48%               |50%               |50%            |45%               |52%               |
 |error             |4.2%              |6.4%              |7.4%              |2.6%              |4.3%           |5.8%              |5.5%              |
 
 
