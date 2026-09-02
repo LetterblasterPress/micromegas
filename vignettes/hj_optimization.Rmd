@@ -13,22 +13,12 @@ vignette: >
 > and word-space stretch/shrink factors identifies settings that produce the
 > most consistent word space.
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  dpi = 1200,
-  fig.align = "center",
-  fig.cap = NA
-)
 
-library(micromegas)
-library(tidyverse)
-```
 
 Begin by enumerating all parameter combinations to explore.
 
-```{r hj_params, cache = TRUE}
+
+``` r
 hj_params <- expand_grid(
   # consider distinct layout candidate text widths (nested table)
   layouts = layout_candidates |>
@@ -73,7 +63,8 @@ Proof each set of parameters, exclude any with problems, and then extend
 acceptable parameter sets to all layout options. For each layout candidate, keep
 the set of parameters that minimizes RMSE.
 
-```{r hj_proofs, cache = TRUE, dependson = "hj_params"}
+
+``` r
 # for each set of params, typeset a proof
 hj_proofs <- map_typeset(hj_params)
 
@@ -116,57 +107,6 @@ hj_proofs <- hj_proofs |>
   )
 ```
 
-```{r hj_proofs_ws_plot, echo = FALSE, dependson = "hj_proofs"}
-left_join(
-  hj_proofs,
-  layout_candidates,
-  by = intersect(names(hj_proofs), names(layout_candidates))
-) |>
-  arrange(word_space_sd, word_space_rmse) |>
-  transmute(
-    layout_description = "%.0f picas × %.0f (%s)\n%.4g″ × %.4g″ (%s)" |>
-      sprintf(
-        text_width_picas,
-        text_height_lines,
-        as.character(text_ratio) |>
-          sub(pattern = "major ", replacement = "M") |>
-          sub(pattern = "minor ", replacement = "m") |>
-          sub(pattern = "(\\d)(nd|rd|th)$", replacement = "\\1") |>
-          sub(pattern = "fourth", replacement = "4th") |>
-          sub(pattern = "fifth", replacement = "5th") |>
-          sub(pattern = "octave", replacement = "8ve"),
-        page_width,
-        page_height,
-        as.character(page_ratio) |>
-          sub(pattern = "major ", replacement = "M") |>
-          sub(pattern = "minor ", replacement = "m") |>
-          sub(pattern = "(\\d)(nd|rd|th)$", replacement = "\\1") |>
-          sub(pattern = "fourth", replacement = "4th") |>
-          sub(pattern = "fifth", replacement = "5th") |>
-          sub(pattern = "octave", replacement = "8ve")
-      ) |>
-      forcats::fct_inorder() |>
-      forcats::fct_rev(),
-    whitespace_analysis = map(id, analyze_whitespace, verbose = TRUE)
-  ) |>
-  unnest(whitespace_analysis) |>
-  ggplot(aes(layout_description, word_space_actual)) +
-  geom_boxplot(notch = TRUE) +
-  scale_y_continuous(
-    breaks = 11 / seq(2, 5),
-    labels = paste0("M/", seq(2, 5)),
-    minor_breaks = seq(6),
-    position = "right"
-  ) +
-  coord_flip() +
-  theme(
-    axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
-    panel.grid.major = element_blank()
-  ) +
-  labs(title = "Word space distribution for H&J candidates")
-```
+<img src="figure/hj_proofs_ws_plot-1.png" alt="" style="display: block; margin: auto;" />
 
-```{r export, include = FALSE}
-usethis::use_data(hj_proofs, overwrite = TRUE)
-```
+

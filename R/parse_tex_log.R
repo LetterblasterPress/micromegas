@@ -58,9 +58,9 @@ parse_tex_log <- function(x) {
   tibble(
     id = path_ext_remove(path_file(log_path)),
     exception_count = length(exceptions),
-    overfull_count = nrow(overfulls),
+    overfull_count = nrow(drop_na(overfulls)),
     overfull_total = sum(overfulls$amount),
-    underfull_count = nrow(underfulls),
+    underfull_count = nrow(drop_na(underfulls)),
     underfull_total = sum(underfulls$amount),
     exceptions = list(exceptions),
     overfulls = list(overfulls),

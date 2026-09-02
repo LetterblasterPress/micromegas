@@ -66,6 +66,7 @@
 #' @importFrom styler style_pkg
 #' @importFrom tibble as_tibble
 #' @importFrom tibble tibble
+#' @importFrom tidyr drop_na
 #' @importFrom tidyr unnest
 #' @importFrom usethis use_r
 #' @importFrom usethis use_test

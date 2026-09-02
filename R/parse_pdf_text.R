@@ -91,6 +91,7 @@ parse_pdf_text <- function(x) {
       (
         lead(y$first_line) %in% TRUE |
           lead(y$quotation) %in% TRUE |
+          lead(y$closing) %in% TRUE |
           lead(y$text) %in% ""
       )
   )

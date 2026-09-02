@@ -88,7 +88,10 @@ importFrom(tibble,
   as_tibble,
   tibble
 )
-importFrom(tidyr,unnest)
+importFrom(tidyr,
+  drop_na,
+  unnest
+)
 importFrom(usethis,
   use_r,
   use_test,

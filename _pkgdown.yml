@@ -14,6 +14,7 @@ reference:
   - title: "Optimizing the page layout"
     contents:
       - layout_candidates
+      - hj_proofs
   - title: "Internal functions"
     desc: >
       The following functions are not exported but are available to developers
@@ -38,3 +39,4 @@ articles:
     navbar: "Book design"
     contents:
       - layout_candidates
+      - hj_optimization
