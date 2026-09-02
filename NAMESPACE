@@ -18,10 +18,12 @@ importFrom(devtools,
 importFrom(digest,digest)
 importFrom(dplyr,
   across,
+  any_of,
   arrange,
   bind_rows,
   coalesce,
   distinct,
+  ends_with,
   everything,
   filter,
   group_by,
@@ -47,6 +49,7 @@ importFrom(fs,
   file_move,
   file_temp,
   path,
+  path_dir,
   path_expand,
   path_ext_remove,
   path_ext_set,
@@ -76,7 +79,10 @@ importFrom(stats,
   sd,
   weighted.mean
 )
-importFrom(stringr,str_trim)
+importFrom(stringr,
+  str_to_sentence,
+  str_trim
+)
 importFrom(styler,style_pkg)
 importFrom(tibble,
   as_tibble,

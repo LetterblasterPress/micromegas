@@ -41,7 +41,7 @@ typeset <- function(
   ))
 
   # define paths for intermediate files
-  proof_dir <- dir_create(proof_path(id))
+  proof_dir <- dir_create(path_dir(proof_path(id)))
   src_path <- path(proof_dir, id, ext = "md")
   meta_path <- path(proof_dir, id, ext = "yml")
   template_path <- path(proof_dir, id, ext = "latex")
