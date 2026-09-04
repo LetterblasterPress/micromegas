@@ -67,6 +67,7 @@
 #' @importFrom tibble as_tibble
 #' @importFrom tibble tibble
 #' @importFrom tidyr drop_na
+#' @importFrom tidyr expand_grid
 #' @importFrom tidyr unnest
 #' @importFrom usethis use_r
 #' @importFrom usethis use_test
@@ -78,3 +79,5 @@
 #' @importFrom yaml read_yaml
 ## usethis namespace: end
 NULL
+
+utils::globalVariables(".data")

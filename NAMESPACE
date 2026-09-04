@@ -90,6 +90,7 @@ importFrom(tibble,
 )
 importFrom(tidyr,
   drop_na,
+  expand_grid,
   unnest
 )
 importFrom(usethis,

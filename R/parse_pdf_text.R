@@ -1,4 +1,4 @@
-parse_pdf_text <- function(x) {
+parse_pdf_text <- function(x, strict = TRUE) {
   pdf_path <- proof_path(x)
   stopifnot(file_exists(pdf_path))
 
@@ -58,7 +58,10 @@ parse_pdf_text <- function(x) {
       params$reflow_epi_5 &
         grepl("Experiments and reasonings", regex_counts$regex)
     )
-  stopifnot(all(regex_counts$match_count == regex_counts$match_count_expected))
+
+  if (strict) {
+    stopifnot(all(regex_counts$match_count == regex_counts$match_count_expected))
+  }
 
   # use regexes to flag special lines/environments
   y <- tibble(

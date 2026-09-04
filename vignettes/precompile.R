@@ -21,6 +21,9 @@ library(knitr)
 "vignettes/hj_optimization.Rmd.orig" |>
   knit(output = "vignettes/hj_optimization.Rmd")
 
+"vignettes/page_break_optimization.Rmd.orig" |>
+  knit(output = "vignettes/page_break_optimization.Rmd")
+
 if (dir_exists("figure")) {
   dir_copy("figure", "vignettes/figure", overwrite = TRUE)
   dir_delete("figure")

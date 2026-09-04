@@ -1,0 +1,299 @@
+---
+title: "Optimizing page breaks"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optimizing page breaks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook optimizes the typesetting parameters that control how the text
+> is broken into pages to avoid widows, orphans, hyphenated page breaks, and
+> broken chapter transitions. Results are saved as a package dataset, see
+> `help(pagination_proofs)`.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+library(micromegas)
+library(tidyverse)
+```
+
+Since Micromégas has relatively short chapters, it is best to allow them to flow
+from one to the next without forcing page breaks. However, this introduces the
+added challenge of ensuring that all chapter breaks land somewhere in the middle
+of a page with at least two lines of body text above and below. If we also
+require every page to have the same number of lines, then proper pagination may
+require finding unobtrusive places in the text to insert blank lines. For this
+edition, blank lines can be inserted in the following ways:
+
+- Chapter headings can be typeset "loose" (all caps with a blank line before the
+  epigraph) or "compact" (small caps with no space before the epigraph). This is
+  a document-level option that applies to all chapter headings.
+- The epigraphs for chapters 3 and/or 5 can fit on a single line or be split
+  over two lines.
+- Blank lines can be inserted before and/or after chapter breaks.
+- Blank lines can be inserted above & below the quotation by Aristotle.
+
+These options yield an intractable number of combinations, so finding optimal
+page layouts requires a breadth-first approach. Proofs will be made
+chapter-by-chapter, and only acceptable sets of parameters will advance to the
+next round of optimization.
+
+To begin, break the source text into chapters and define parameters for
+chapter-specific grid searches.
+
+```{r recursive_inputs, cache = TRUE}
+# split source into chapters
+recursive_source <- split(
+  source_text("md+tex"),
+  cumsum(grepl("^`\\\\ch.pre\\{\\}`\\{=tex\\}$", source_text("md+tex")))
+)
+
+# define a grid search for each chapter
+recursive_params <- list(
+  ch1 = expand_grid(loose_headings = c(FALSE, TRUE), ch1pre = 3:7, ch1post = 2:4),
+  ch2 = expand_grid(ch2pre = 1:2, ch2post = 1:2),
+  ch3 = expand_grid(ch3pre = 1:2, ch3post = 1:2, reflow_epi_3 = c(FALSE, TRUE)),
+  ch4 = expand_grid(ch4pre = 1:2, ch4post = 1:2),
+  ch5 = expand_grid(ch5pre = 1:2, ch5post = 1:2, reflow_epi_5 = c(FALSE, TRUE)),
+  ch6 = expand_grid(ch6pre = 1:2, ch6post = 1:2),
+  ch7 = expand_grid(ch7pre = 1:2, ch7post = 1:2, aristotle_space = c(0.5, 1, 0))
+)
+
+# filter out redundant grid-search combos, favoring visual balance
+recursive_params$ch1 <- recursive_params$ch1 |>
+  filter(ch1pre >= ch1post) |>
+  filter(!duplicated(paste(loose_headings, ch1pre + ch1post)))
+
+recursive_params$ch2 <- recursive_params$ch2 |>
+  filter((ch2pre - ch2post) %in% 0:1)
+
+recursive_params$ch3 <- recursive_params$ch3 |>
+  filter((ch3pre - ch3post) %in% 0:1) |>
+  filter(
+    (ch3pre == ch3post) |
+      !(
+        duplicated(ch3pre + reflow_epi_3 + ch3post) |
+          duplicated(ch3pre + reflow_epi_3 + ch3post, fromLast = TRUE)
+      )
+  )
+
+recursive_params$ch4 <- recursive_params$ch4 |>
+  filter((ch4pre - ch4post) %in% 0:1)
+
+recursive_params$ch5 <- recursive_params$ch5 |>
+  filter((ch5pre - ch5post) %in% 0:1) |>
+  filter(
+    (ch5pre == ch5post) |
+      !(
+        duplicated(ch5pre + reflow_epi_5 + ch5post) |
+          duplicated(ch5pre + reflow_epi_5 + ch5post, fromLast = TRUE)
+      )
+  )
+
+recursive_params$ch6 <- recursive_params$ch6 |>
+  filter((ch6pre - ch6post) %in% 0:1)
+
+recursive_params$ch7 <- recursive_params$ch7 |>
+  filter((ch7pre - ch7post) %in% 0:1)
+
+# expand grid-search params to all textblock candidates
+recursive_params <- map(recursive_params, function(x) {
+  hj_proofs |>
+    slice_head(n = 1, by = c("text_height_lines", "text_width")) |>
+    tidy_params() |>
+    select(-any_of(reduce(map(recursive_params, names), c))) |>
+    mutate(`header-includes` = "\\usepackage[check=warning]{widows-and-orphans}") |>
+    mutate(grid_search = map(row_number(), ~x)) |>
+    unnest(grid_search) |>
+    distinct()
+})
+```
+
+Next, perform a breadth-first search to identify acceptable solutions that are
+free of undesirable page breaks. Apply solutions to all matching layout
+candidates.
+
+```{r page_break_solutions, cache = TRUE, dependson = "recursive_inputs"}
+stopifnot(length(recursive_source) == 7L)
+stopifnot(length(recursive_params) == 7L)
+
+solutions <- recursive_params[[1]]
+for (i in 1:7) {
+  if (nrow(solutions) == 0) stop("No solutions")
+
+  # typeset partial solutions
+  solutions <- head(recursive_params, i) |>
+    reduce(~ suppressMessages(
+      full_join(.x, .y, relationship = "many-to-many")
+    )) %>%
+    inner_join(
+      solutions[, intersect(names(.), names(solutions))],
+      by = intersect(names(.), names(solutions))
+    )
+
+  message(sprintf(
+    if_else(
+      i == 1,
+      "Evaluating %i candidates for chapter %i...",
+      "Evaluating %i candidates for chapters 1-%i..."
+    ),
+    nrow(solutions),
+    i
+  ))
+
+  solutions <- split(solutions, seq(nrow(solutions))) |>
+    map_dfr(~ typeset(src = reduce(head(recursive_source, i), c), params = .))
+
+  # identify problem-free proofs
+  solutions <- inner_join(
+    by = "id",
+    solutions,
+    map_dfr(solutions$id, parse_tex_log) |>
+      filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
+      mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
+      filter(hyphen_runs == 0) |>
+      with(map_dfr(id, ~ tibble(id = ., analyze_page_breaks(.)))) |>
+      filter(w_o_h_total == 0) |>
+      mutate(broken_epigraphs = map_dbl(id, count_broken_epigraphs)) |>
+      filter(broken_epigraphs == 0) |>
+      mutate(type_usage = map_dbl(id, estimate_type_usage)) |>
+      filter(type_usage <= 1)
+  )
+
+  # drop yet-to-be-optimized params
+  solutions <- tidy_params(solutions) |>
+    select(-any_of(setdiff(
+      unlist(map(recursive_params, names)),
+      unlist(map(head(recursive_params, i), names))
+    )))
+
+  message(sprintf(
+    if_else(
+      i == 1,
+      " - found %i solutions for chapter %i\n",
+      " - found %i solutions for chapters 1-%i\n"
+    ),
+    nrow(solutions),
+    i
+  ))
+}
+rm(i)
+
+# proof solutions for all layouts
+solutions <- solutions |>
+  tidy_params() |>
+  select(-any_of(
+    setdiff(names(layout_candidates), c("text_height_lines", "text_width"))
+  )) |>
+  left_join(
+    layout_candidates,
+    by = c("text_height_lines", "text_width"),
+    relationship = "many-to-many"
+  ) |>
+  map_typeset() %>%
+  inner_join(
+    layout_candidates,
+    .,
+    by = intersect(names(layout_candidates), names(.))
+  ) |>
+  rename(layout_error = error)
+```
+
+Finally, tidy the output and append metrics describing the quality of the
+resulting typeset.
+
+```{r pagination_proofs, cache = TRUE, dependson = "page_break_solutions"}
+pagination_proofs <- solutions |>
+  mutate(
+    log_summary = map(id, function(id) {
+      y <- parse_tex_log(id)
+      y <- y[, c("exception_count", "overfull_count", "underfull_count")]
+      stopifnot(nrow(y) == 1L)
+      stopifnot(y$exception_count == 0L)
+      stopifnot(y$overfull_count == 0L)
+      stopifnot(y$underfull_count == 0L)
+      return(y)
+    })
+  ) |>
+  unnest(log_summary) |>
+  slice_min(n = 1, exception_count) |>
+  slice_min(n = 1, overfull_count) |>
+  slice_min(n = 1, underfull_count) |>
+  mutate(
+    word_space_summary = map(id, function(id) {
+      y <- analyze_whitespace(id) |>
+        select(matches("mean|sd|rmse|min|max"))
+      stopifnot(nrow(y) == 1L)
+      return(y)
+    })
+  ) |>
+  unnest(word_space_summary) |>
+  mutate(
+    hyphen_summary = map(id, function(id) {
+      y <- count_hyphen_runs(id, verbose = TRUE)
+      stopifnot(all(y$hyphens == "-"))
+      stopifnot(!any(duplicated(y$page)))
+      tibble(
+        hyphen_count = sum(y$count),
+        hyphens_pp_mean = mean(y$count),
+        hyphens_pp_min = min(y$count),
+        hyphens_pp_max = max(y$count)
+      )
+    })
+  ) |>
+  unnest(hyphen_summary) |>
+  mutate(
+    page_break_summary = map(id, function(id) {
+      y <- analyze_page_breaks(id) |>
+        transmute(
+          widows = as.integer(orphan_widow_recto + orphan_widow_verso +
+            orphan_recto + orphan_verso), # sic
+          orphans = as.integer(orphan_widow_recto + orphan_widow_verso +
+            widow_recto + widow_verso), # sic
+          hyphenated_breaks = as.integer(hyphen_recto + hyphen_verso),
+          broken_epigraphs = count_broken_epigraphs(id)
+        )
+      stopifnot(nrow(y) == 1L)
+      stopifnot(y$widows == 0L)
+      stopifnot(y$orphans == 0L)
+      stopifnot(y$hyphenated_breaks == 0L)
+      stopifnot(y$broken_epigraphs == 0L)
+      return(y)
+    })
+  ) |>
+  unnest(page_break_summary) |>
+  slice_min(n = 1, widows) |>
+  slice_min(n = 1, orphans) |>
+  slice_min(n = 1, hyphenated_breaks) |>
+  slice_min(n = 1, broken_epigraphs) |>
+  mutate(
+    ch_vspace_sd = apply(1, sd, X = cbind(
+      ch2pre + ch2post,
+      ch3pre + ch3post,
+      ch4pre + ch4post,
+      ch5pre + ch5post,
+      ch6pre + ch6post,
+      ch7pre + ch7post
+    ))
+  ) |>
+  mutate(
+    type_usage_summary = map(id, function(id) {
+      y <- estimate_type_usage(id, verbose = TRUE)
+      stopifnot(all(y$pct <= 1))
+      stopifnot(!any(duplicated(y$page)))
+      tibble(
+        type_usage_mean = mean(y$pct),
+        type_usage_lb = mean(y$pct) + qnorm(0.005) * sd(y$pct) / sqrt(nrow(y)),
+        type_usage_ub = mean(y$pct) + qnorm(0.995) * sd(y$pct) / sqrt(nrow(y)),
+        type_usage_max = max(y$pct)
+      )
+    })
+  ) |>
+  unnest(type_usage_summary)
+```
+
+```{r export, include = FALSE}
+usethis::use_data(pagination_proofs, overwrite = TRUE)
+```

@@ -1,0 +1,48 @@
+#' Additional typesetting parameters for optimal page breaks
+#'
+#' This table builds on [`hj_proofs`][micromegas::hj_proofs], optimizing
+#' additional typesetting parameters that control vertical space and page
+#' breaks. All proofs rendered without error; are free of overfull or underfull
+#' lines; have no consecutive hyphenated lines; have no widows, orphans,
+#' hyphenated page breaks, or broken chapter transitions; and are limited to
+#' layouts that can be set with available type.
+#'
+#' @format A [tibble][tibble::tibble-package]
+#' \describe{
+#'   \item{layout_id--layout_error}{describe the page layout as in
+#'     [`layout_candidates`][micromegas::layout_candidates]}
+#'   \item{id}{proof ID as returned by `typeset()`}
+#'   \item{draft--ch7post}{typesetting parameters as described in
+#'     `tidy_params()`}
+#'   \item{exception_count}{count of LaTeX errors}
+#'   \item{overfull_count, underfull_count}{counts of overfull and underfull
+#'     lines}
+#'   \item{word_space_mean, word_space_sd, word_space_rmse, word_space_min,
+#'     word_space_max}{metrics describing the word-space consistency in the
+#'     rendered PDF}
+#'   \item{hyphen_count}{count of hyphenated lines}
+#'   \item{hyphens_pp_mean, hyphens_pp_min, hyphens_pp_max}{metrics describing
+#'     the number of hyphens per page}
+#'   \item{widows, orphans, hyphenated_breaks, broken_epigraphs}{counts of bad
+#'     page breaks}
+#'   \item{ch_vspace_sd}{standard deviation of the vertical space that pads
+#'     chapter transitions 2--7}
+#'   \item{type_usage_mean, type_usage_lb, type_usage_ub, type_usage_max}{
+#'     metrics describing the amount of type required to set each page,
+#'     expressed as a fraction of the current Letterblaster Press inventory;
+#'     lower & upper bounds describe a 99% confidence interval}
+#' }
+#'
+#' @seealso `vignette("page_break_optimization")`
+#'
+#' @examples
+#' str(pagination_proofs)
+#'
+#' # Note 3 layout candidate have no solution (incl. 1 with no H&J solutions)
+#' pagination_proofs |>
+#'   tidy_params() |>
+#'   dplyr::select(any_of(names(layout_candidates))) |>
+#'   dplyr::anti_join(x = layout_candidates) |>
+#'   dplyr::mutate(across(where(is.factor), as.character)) |>
+#'   str()
+"pagination_proofs"

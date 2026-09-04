@@ -30,7 +30,7 @@ count_hyphen_runs <- function(x, verbose = FALSE) {
     y <- summarise(y, .by = everything(), count = n()) |>
       arrange(across(everything()))
   } else {
-    y <- sum(nchar(y$hyphens) > 3)
+    y <- sum(nchar(y$hyphens) > 1)
   }
 
   return(y)
