@@ -23,8 +23,8 @@ hj_proofs
 \description{
 This table contains typesetting parameters and resulting word-space metrics
 for proofs with the best hyphenation & justification. These proofs rendered
-without error, are free of overfull or underfull lines, and have no more
-than three consecutive lines that end with a hyphenated word.
+without error, are free of overfull or underfull lines, and have no
+consecutive hyphenated lines.
 }
 \examples{
 str(hj_proofs)
