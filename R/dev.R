@@ -190,7 +190,8 @@ dev_coverage <- function(file = NULL) {
 
   file_coverage <- covr::coverage_to_list(coverage)$filecoverage
 
-  if (!is.null(file) || min(file_coverage) < 100) {
+  # if (!is.null(file) || min(file_coverage) < 100) {
+  if (!is.null(file)) {
     if (is.null(file)) file <- head(names(sort(file_coverage)), 1)
     covr::file_report(coverage, file)
   }
