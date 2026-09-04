@@ -14,6 +14,8 @@ vignette: >
 > - a whole-line text height that yields a harmoniously proportioned text block
 > - page dimensions and margins that yield harmonious proportions for all
 >   rectangles of positive & negative space on the two-page spread
+>
+> Results are saved as a package dataset, see `help(layout_candidates)`.
 
 
 

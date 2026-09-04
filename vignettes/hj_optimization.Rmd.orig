@@ -11,7 +11,8 @@ vignette: >
 > justification. During this process, LaTeX parameters are kept "fussy" but bad
 > page breaks are disregarded. A grid search over paragraph indentation widths
 > and word-space stretch/shrink factors identifies settings that produce the
-> most consistent word space.
+> most consistent word space. Results are saved as a package dataset, see
+> `help(hj_proofs)`.
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(

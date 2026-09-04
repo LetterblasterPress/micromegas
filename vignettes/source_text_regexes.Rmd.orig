@@ -8,7 +8,8 @@ vignette: >
 ---
 
 > The purpose of this notebook is to reverse engineer regular expressions to
-> identify special formatting environments and indented lines.
+> identify special formatting environments and indented lines. Results are saved
+> as a package dataset, see `help(source_text_regexes)`.
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
