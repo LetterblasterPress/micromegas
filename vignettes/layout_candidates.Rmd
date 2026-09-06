@@ -11,9 +11,10 @@ vignette: >
 > set in 11-point *Centaur*. Each candidate defines:
 >
 > - a whole-pica text width that yields 44--66 characters per line
-> - a whole-line text height that yields a harmoniously proportioned text block
-> - page dimensions and margins that yield harmonious proportions for all
->   rectangles of positive & negative space on the two-page spread
+> - a whole-line text height that produces a harmoniously proportioned text
+>   block
+> - page dimensions and margins that produce harmonious proportions for all
+>   rectangles of positive & negative space on the one- and two-page spread
 >
 > Results are saved as a package dataset, see `help(layout_candidates)`.
 
