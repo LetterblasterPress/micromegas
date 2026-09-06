@@ -7,15 +7,21 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-> This notebook identifies proper nouns that appear in Micromégas frequently
-> enough to warrant custom hyphenation rules.
+> This notebook analyzes Micromégas text and proof output to aid in the
+> development of custom hyphenation rules.
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
+library(fs)
 library(micromegas)
 library(tidyverse)
 ```
+
+# Frequent proper nouns
+
+It is best to avoid hyphenating proper nouns unless they occur within the text
+with the frequency of common words.
 
 ```{r, echo = FALSE}
 source_text() |>
@@ -35,6 +41,52 @@ source_text() |>
     !tolower(word) %in% word
   ) |>
   arrange(desc(freq_ntile)) |>
-  select(` ` = word, percentile = freq_ntile) |>
-  knitr::kable(caption = "Frequency of common proper nouns", digits = 1)
+  select(` ` = word, `word frequency percentile` = freq_ntile) |>
+  knitr::kable(digits = 1)
+```
+
+# Custom hyphenation rules
+
+```{r, echo = FALSE}
+keep(typesetting_template(), grepl, pattern = "^\\\\hyphenation")
+```
+
+# Unresolved hyphenation issues
+
+```{r hj_issues, echo = FALSE, cache = TRUE}
+proofs_dir() |>
+  dir_ls(glob = "*.rds", recurse = TRUE) |>
+  map_dfr(read_rds) |>
+  dplyr::filter(draft, `header-includes` == "") |>
+  dplyr::filter(
+    map_lgl(
+      id,
+      ~ identical(
+          source_text("md+tex"),
+          readLines(path_ext_set(proof_path(.), "md"))
+        )
+    )
+  ) |>
+  with(map_dfr(id, parse_tex_log)) |>
+  dplyr::filter(overfull_count > 0) |>
+  unnest(overfulls) |>
+  dplyr::mutate(
+    log = log |>
+      gsub(pattern = "\\\\*(\\[\\])?\\\\TU\\S+\\d+\\.?\\d*", replacement = "") |>
+      sub(pattern = "^lines [0-9-]+ ", replacement = "") |>
+      gsub(pattern = "``", replacement = "“") |>
+      gsub(pattern = "''", replacement = "”") |>
+      gsub(pattern = "`", replacement = "‘") |>
+      gsub(pattern = "'", replacement = "’") |>
+      sub(pattern = "\\s*\\|\\s*$", replacement = "") |>
+      stringr::str_trim() |>
+      sprintf(fmt = "`%s`")
+  ) |>
+  dplyr::summarise(
+    .by = c("id", "log"),
+    pts = sum(amount)
+  ) |>
+  dplyr::summarise(n = n_distinct(id), pts = mean(pts), .by = log) |>
+  arrange(desc(n * pts)) |>
+  knitr::kable()
 ```
