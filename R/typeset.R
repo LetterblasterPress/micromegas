@@ -89,6 +89,7 @@ typeset <- function(
   }
 
   # read cached results
+  system2("touch", rds_path)
   read_rds(rds_path)
 }
 
