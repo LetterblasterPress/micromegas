@@ -5,6 +5,7 @@ count_broken_epigraphs <- function(x) {
   y <- expand_grid(
     x = proof_path(x) |>
       pdf_text() |>
+      setdiff("") |>
       strsplit("\n") |>
       map(str_trim) |>
       map_chr(head, n = 1),
