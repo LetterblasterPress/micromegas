@@ -24,6 +24,9 @@ library(knitr)
 "vignettes/page_break_optimization.Rmd.orig" |>
   knit(output = "vignettes/page_break_optimization.Rmd")
 
+"vignettes/layout_optimization.Rmd.orig" |>
+  knit(output = "vignettes/layout_optimization.Rmd")
+
 if (dir_exists("figure")) {
   dir_copy("figure", "vignettes/figure", overwrite = TRUE)
   dir_delete("figure")

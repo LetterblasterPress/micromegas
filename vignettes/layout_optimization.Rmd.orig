@@ -1,0 +1,400 @@
+---
+title: "Optimizing the final layout"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optimizing the final layout}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook brings all upstream optimization work together to identify the
+> best overall layout to use for this edition. Result is saved as a package
+> dataset, see `help(best_layout)`.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dpi = 1200,
+  fig.align = "center",
+  fig.cap = NA
+)
+
+library(letterblasteR)
+library(micromegas)
+library(tidyverse)
+```
+
+# Summary of upstream work
+
+In `vignette("layout_candidates")`, we identified `r nrow(layout_candidates)`
+layouts candidates with:
+
+- whole-pica text widths that yield 44--66 characters per line
+- whole-line text heights that produce a harmoniously proportioned text block
+- page dimensions and margins that produce harmonious proportions for all
+  rectangles of positive & negative space on the two-page spread
+
+In `vignette("hj_optimization")`, we performed a grid search of typesetting
+parameters that control hyphenation and justification. For each candidate text
+width, we identified the set of typesetting parameters that produces justified
+text with the least distorted word space. No solutions were found for a
+`r filter(layout_candidates, !text_width %in% hj_proofs$text_width)$text_width_picas`-pica
+text width, leaving us with `r nrow(hj_proofs)` layout candidates moving
+forward.
+
+In `vignette("page_break_optimization")`, we performed a chapter-by-chapter grid
+search of typesetting parameters that control page breaks and vertical space.
+There were `r nrow(pagination_proofs)` solutions that can be set with available
+metal type and have zero underfull lines, overfull lines, widows, orphans,
+hyphenated page breaks, broken quotations, or broken chapter transitions. Only
+`r n_distinct(pagination_proofs$layout_id)` layout candidates remain.
+
+```{r, echo = FALSE}
+with(pagination_proofs, {
+  stopifnot(all(exception_count == 0L))
+  stopifnot(all(underfull_count == 0L))
+  stopifnot(all(overfull_count == 0L))
+  stopifnot(all(widows == 0L))
+  stopifnot(all(orphans == 0L))
+  stopifnot(all(hyphenated_breaks == 0L))
+  stopifnot(all(broken_epigraphs == 0L))
+  stopifnot(all(type_usage_max < 1))
+})
+```
+
+# Selecting the best layout
+
+Let's begin by picking a single best option for each layout candidate. We get
+slightly different sets depending on whether we favor consistent word space or
+consistent vertical space around chapter transitions. For thoroughness, let's
+consider both.
+
+```{r best_pagination_proofs, cache = TRUE}
+best_pagination_proofs <- bind_rows(
+  pagination_proofs |>
+    slice_min(by = "layout_id", word_space_rmse) |>
+    slice_min(by = "layout_id", ch_vspace_sd),
+  pagination_proofs |>
+    slice_min(by = "layout_id", ch_vspace_sd) |>
+    slice_min(by = "layout_id", word_space_rmse)
+) |>
+  distinct() |>
+  arrange(layout_id)
+```
+
+```{r best_pagination_proofs_table, echo = FALSE, dependson = "best_pagination_proofs"}
+best_pagination_proofs |>
+  transmute(
+    id = sprintf("`%s`", substr(id, 1, 8)),
+    layout_id,
+    layout_error = sprintf("%.2g%%", 100 * layout_error),
+    word_space = word_space_mean,
+    word_space_min,
+    word_space_max,
+    word_space_sd,
+    word_space_rmse,
+    hyphen_count,
+    ch_vspace_sd
+  ) |>
+  mutate(
+    across(where(is.double), ~ format(sprintf("%.3g", .))),
+    across(where(is.integer), as.character)
+  ) |>
+  pivot_longer(-id, names_to = " ") |>
+  pivot_wider(names_from = "id") |>
+  mutate(
+    ` ` = ` ` |>
+      sub(pattern = "_(min|max)$", replacement = ", \\1") |>
+      sub(pattern = "_(sd|rmse)$", replacement = ", \\U\\1", perl = TRUE) |>
+      gsub(pattern = "_", replacement = " ") |>
+      sub(pattern = "\\bid\\b", replacement = "ID") |>
+      sub(pattern = "ch v", replacement = "chapter v-") |>
+      sub(pattern = "^(.)", replacement = "\\U\\1", perl = TRUE)
+  ) |>
+  knitr::kable(align = "lcccccc")
+```
+
+Manual review of these proofs found that all of the layout 3 & 4 options suffer
+from some awkward chapter transitions and bad line breaks, and the layout 1
+option ends rather awkwardly on a short verso page.
+
+That leaves layout 7!
+
+```{r best_layout, echo = FALSE, cache = TRUE, dependson = "best_pagination_proofs"}
+best_layout <- typeset(
+  params = slice_min(best_pagination_proofs, n = 1, word_space_max) |>
+    tidy_params() |>
+    mutate(
+      draft = FALSE,
+      title_page = TRUE,
+      ch1pre = ch1pre - 1, ch1post = ch1post + 1,
+      ch2pre = (ch2pre + ch2post) / 2, ch2post = ch2pre,
+      ch3pre = (ch3pre + ch3post) / 2, ch3post = ch3pre,
+      ch4pre = (ch4pre + ch4post) / 2, ch4post = ch4pre,
+      ch5pre = (ch5pre + ch5post) / 2, ch5post = ch5pre,
+      ch6pre = (ch6pre + ch6post) / 2, ch6post = ch6pre,
+      ch7pre = (ch7pre + ch7post) / 2, ch7post = ch7pre,
+      closing_space = 2
+    ),
+  src = source_text("md+tex") |>
+    sub(
+      pattern = "^\\| Anima",
+      replacement = "| \\\\noindent{}\\\\hspace*{12pt}Anima"
+    ) |>
+    sub(
+      pattern = "^\\| est quod",
+      replacement = "| \\\\hspace*{12pt}est quod"
+    ) |>
+    sub(pattern = "\\[Tr.\\]", replacement = "*\\[Tr.\\]*", fixed = TRUE),
+  template = typesetting_template() %>%
+    if_else(
+      grepl("aristotle_space", .) & grepl("centering", .),
+      sub("\\\\centering", "", .),
+      .
+    )
+) %>%
+  inner_join(
+    layout_candidates,
+    .,
+    by = intersect(names(layout_candidates), names(.))
+  ) |>
+  rename(layout_error = error) |>
+  mutate(
+    log_summary = map(id, function(id) {
+      y <- parse_tex_log(id)
+      y <- y[, c("exception_count", "overfull_count", "underfull_count")]
+      stopifnot(nrow(y) == 1L)
+      stopifnot(y$exception_count == 0L)
+      stopifnot(y$overfull_count == 0L)
+      stopifnot(y$underfull_count == 0L)
+      return(y)
+    })
+  ) |>
+  unnest(log_summary) |>
+  mutate(
+    word_space_summary = map(id, function(id) {
+      y <- analyze_whitespace(id) |>
+        select(matches("mean|sd|rmse|min|max"))
+      stopifnot(nrow(y) == 1L)
+      return(y)
+    })
+  ) |>
+  unnest(word_space_summary) |>
+  mutate(
+    hyphen_summary = map(id, function(id) {
+      y <- count_hyphen_runs(id, verbose = TRUE)
+      stopifnot(all(y$hyphens == "-"))
+      stopifnot(!any(duplicated(y$page)))
+      tibble(hyphen_count = sum(y$count))
+    })
+  ) |>
+  unnest(hyphen_summary) |>
+  mutate(
+    page_break_summary = map(id, function(id) {
+      y <- analyze_page_breaks(id) |>
+        transmute(
+          widows = as.integer(orphan_widow_recto + orphan_widow_verso +
+            orphan_recto + orphan_verso), # sic
+          orphans = as.integer(orphan_widow_recto + orphan_widow_verso +
+            widow_recto + widow_verso), # sic
+          hyphenated_breaks = as.integer(hyphen_recto + hyphen_verso),
+          broken_epigraphs = count_broken_epigraphs(id)
+        )
+      stopifnot(nrow(y) == 1L)
+      stopifnot(y$widows == 0L)
+      stopifnot(y$orphans == 0L)
+      stopifnot(y$hyphenated_breaks == 0L)
+      stopifnot(y$broken_epigraphs == 0L)
+      return(y)
+    })
+  ) |>
+  unnest(page_break_summary) |>
+  mutate(
+    type_usage_summary = map(id, function(id) {
+      y <- estimate_type_usage(id, verbose = TRUE)
+      stopifnot(all(y$pct <= 1))
+      stopifnot(!any(duplicated(y$page)))
+      tibble(
+        type_usage_mean = mean(y$pct),
+        type_usage_lb = mean(y$pct) + qnorm(0.005) * sd(y$pct) / sqrt(nrow(y)),
+        type_usage_ub = mean(y$pct) + qnorm(0.995) * sd(y$pct) / sqrt(nrow(y)),
+        type_usage_max = max(y$pct)
+      )
+    })
+  ) |>
+  unnest(type_usage_summary)
+
+with(best_layout, {
+  stopifnot(id == "f4a2d443252d4daf90590814f6074c43")
+  stopifnot(all(exception_count == 0L))
+  stopifnot(all(underfull_count == 0L))
+  stopifnot(all(overfull_count == 0L))
+  stopifnot(all(widows == 0L))
+  stopifnot(all(orphans == 0L))
+  stopifnot(all(hyphenated_breaks == 0L))
+  stopifnot(all(broken_epigraphs == 0L))
+  stopifnot(all(type_usage_max < 1))
+})
+
+best_layout_text <- left_join(
+  parse_pdf_text(best_layout$id),
+  analyze_whitespace(best_layout$id, verbose = TRUE) |>
+    select(where(is.numeric)),
+  by = c("page", "line")
+)
+
+# fix line numbers following chapter transitions with half-line padding
+best_layout |>
+  select(matches("^ch[2-7]pre")) |>
+  pivot_longer(everything()) |>
+  with(which((value %% 1) != 0) + 1) |>
+  identical(c(2, 6)) |>
+  stopifnot()
+
+best_layout_text <- expand_grid(
+  page = seq(min(best_layout_text$page) + 1, max(best_layout_text$page) - 1),
+  line = seq(max(best_layout_text$line))
+) |>
+  anti_join(best_layout_text, by = c("page", "line")) |>
+  mutate(
+    dta = map(row_number(), function(x) {
+      best_layout_text |>
+        filter(text == "") |>
+        select(-page, -line) |>
+        distinct()
+    })
+  ) |>
+  unnest(dta) |>
+  bind_rows(best_layout_text) |>
+  arrange(page, line)
+```
+
+```{r best_layout_table, echo = FALSE, dependson = "best_layout"}
+best_layout |>
+  mutate(
+    parindent_ratio = round_ratios(parindent, leading) |>
+      names(),
+    across(ends_with("ratio"), function(x) {
+      as.character(x) |>
+        sub(pattern = "^inverse ", replacement = "") |>
+        sub(pattern = "^major ", replacement = "M") |>
+        sub(pattern = "^minor ", replacement = "m") |>
+        sub(pattern = "(\\d)(st|nd|rd|th)$", replacement = "\\1") |>
+        sub(pattern = "^fourth$", replacement = "4th") |>
+        sub(pattern = "^fifth$", replacement = "5th") |>
+        sub(pattern = "octave", replacement = "8ve") |>
+        sub(pattern = "triple", replacement = "2×8ve")
+    })
+  ) |>
+  transmute(
+    `typeset ID` = sprintf("`%s`", id),
+    `page size` = "%.3f″ × %.3f″ (%s; 2-up %s)" |>
+      sprintf(page_width, page_height, page_ratio, page_2up_ratio),
+    `textblock size` = "%.0f picas × %.0f lines (%s; 2-up %s)" |>
+      sprintf(text_width_picas, text_height_lines, text_ratio, text_2up_ratio),
+    `characters per line` = best_layout_text |>
+      filter(expected_width == 72.27 * best_layout$text_width) |>
+      with(mean(nchar(text))) |>
+      sprintf(fmt = "%.3g"),
+    `inner–outer margins` = "%.3f″:%.3f″ (%s)" |>
+      sprintf(i_mar, o_mar, oi_ratio),
+    `top–bottom margins` = "%.3f″:%.3f″ (%s)" |>
+      sprintf(t_mar, b_mar, bt_ratio),
+    `margin ratios (IT-OT-OB-IB)` = "%s-%s-%s-%s" |>
+      sprintf(ti_ratio, ot_ratio, ob_ratio, bi_ratio),
+    `2-up margin ratios (IIT-IIB)` = "%s-%s" |>
+      sprintf(tii_ratio, bii_ratio),
+    `layout error` = sprintf("%.2g%%", 100 * layout_error),
+    `body text page count` = as.character(max(best_layout_text$page)),
+    `body text line count` = best_layout_text |>
+      filter(!chapter, !epigraph, !closing, !text %in% "") |>
+      nrow() |>
+      as.character(),
+    `paragraph indentation` = "%.0f points (%s)" |>
+      sprintf(parindent, parindent_ratio),
+    `word space in points` = "%.3g [%.3g–%.3g]" |>
+      sprintf(word_space_mean, word_space_min, word_space_max),
+    `hyphenated lines` = "%i (%.2g%%)" |>
+      sprintf(
+        hyphen_count,
+        100 * hyphen_count / as.numeric(`body text line count`)
+      ),
+    `lines of space padding chapters 2–7` = best_layout |>
+      select(matches("^ch[2-7]")) |>
+      pivot_longer(everything()) |>
+      mutate(name = as.integer(gsub("\\D", "", name))) |>
+      summarise(.by = name, vspace = sum(value)) |>
+      with(paste(vspace, collapse = "-")),
+    `typical type usage per page` = "%.2g–%.2g%%" |>
+      sprintf(100 * type_usage_lb, 100 * type_usage_ub),
+    `maximum type usage per page` = "%.2g%%" |>
+      sprintf(100 * type_usage_max)
+  ) |>
+  pivot_longer(everything()) |>
+  knitr::kable(align = "rl", col.names = c("", ""))
+```
+
+# Analyzing the final proof
+
+## Word space consistency
+
+```{r best_layout_wordspace_plot, echo = FALSE, dependson = "best_layout"}
+best_layout_text |>
+  mutate(
+    err = (coalesce(expected_width / natural_width, 1) - 1),
+    chap_label = if_else(chapter, cumsum(chapter), NA)
+  ) |>
+  ggplot(aes(page, line)) +
+  geom_tile(aes(fill = err)) +
+  geom_text(aes(label = chap_label), na.rm = TRUE) +
+  scale_x_continuous(
+    expand = FALSE,
+    breaks = seq(1, 99, by = 4),
+    labels = paste0("p", seq(1, 99, by = 4)),
+    position = "top"
+  ) +
+  scale_y_reverse(
+    expand = FALSE,
+    breaks = c(1, 10 * seq(1:3)),
+    labels = paste("line", c(1, 10 * seq(1:3)))
+  ) +
+  scale_fill_gradient2(labels = scales::label_percent()) +
+  theme(
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    legend.position = "bottom",
+    legend.title.position = "top",
+  ) +
+  labs(fill = "line shrink/stretch")
+```
+
+## Tightest & loosest lines
+
+```{r best_layout_wordspace_list, echo = FALSE, dependson = "best_layout"}
+best_layout_text |>
+  filter(
+    (expected_width == 72.27 * best_layout$text_width) |
+      (expected_width == 72.27 * best_layout$text_width - best_layout$parindent)
+  ) |>
+  mutate(error = coalesce(word_space_actual / word_space_expected, 1) - 1) |>
+  filter(!between(
+    error,
+    quantile(error, probs = 0.025),
+    quantile(error, probs = 0.981)
+  )) |>
+  arrange(word_space_actual) |>
+  transmute(
+    page,
+    line,
+    `word space` = round(word_space_actual, 2),
+    text = if_else(indented, paste("¶ ", text), text)
+  ) |>
+  knitr::kable(align = "cccl")
+```
+
+```{r export, include = FALSE, dependson = "best_layout"}
+usethis::use_data(best_layout, overwrite = TRUE)
+```

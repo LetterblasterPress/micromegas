@@ -16,6 +16,7 @@ reference:
       - layout_candidates
       - hj_proofs
       - pagination_proofs
+      - best_layout
   - title: "Internal functions"
     desc: >
       The following functions are not exported but are available to developers
@@ -42,3 +43,4 @@ articles:
       - layout_candidates
       - hj_optimization
       - page_break_optimization
+      - layout_optimization

@@ -26,6 +26,7 @@
 #' @importFrom dplyr relocate
 #' @importFrom dplyr select
 #' @importFrom dplyr slice
+#' @importFrom dplyr slice_max
 #' @importFrom dplyr starts_with
 #' @importFrom dplyr summarise
 #' @importFrom dplyr transmute

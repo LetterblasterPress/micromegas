@@ -1,0 +1,159 @@
+---
+title: "Optimizing the final layout"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optimizing the final layout}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook brings all upstream optimization work together to identify the
+> best overall layout to use for this edition. Result is saved as a package
+> dataset, see `help(best_layout)`.
+
+
+
+# Summary of upstream work
+
+In `vignette("layout_candidates")`, we identified 7
+layouts candidates with:
+
+- whole-pica text widths that yield 44--66 characters per line
+- whole-line text heights that produce a harmoniously proportioned text block
+- page dimensions and margins that produce harmonious proportions for all
+  rectangles of positive & negative space on the two-page spread
+
+In `vignette("hj_optimization")`, we performed a grid search of typesetting
+parameters that control hyphenation and justification. For each candidate text
+width, we identified the set of typesetting parameters that produces justified
+text with the least distorted word space. No solutions were found for a
+15-pica
+text width, leaving us with 6 layout candidates moving
+forward.
+
+In `vignette("page_break_optimization")`, we performed a chapter-by-chapter grid
+search of typesetting parameters that control page breaks and vertical space.
+There were 53 solutions that can be set with available
+metal type and have zero underfull lines, overfull lines, widows, orphans,
+hyphenated page breaks, broken quotations, or broken chapter transitions. Only
+4 layout candidates remain.
+
+
+
+# Selecting the best layout
+
+Let's begin by picking a single best option for each layout candidate. We get
+slightly different sets depending on whether we favor consistent word space or
+consistent vertical space around chapter transitions. For thoroughness, let's
+consider both.
+
+
+``` r
+best_pagination_proofs <- bind_rows(
+  pagination_proofs |>
+    slice_min(by = "layout_id", word_space_rmse) |>
+    slice_min(by = "layout_id", ch_vspace_sd),
+  pagination_proofs |>
+    slice_min(by = "layout_id", ch_vspace_sd) |>
+    slice_min(by = "layout_id", word_space_rmse)
+) |>
+  distinct() |>
+  arrange(layout_id)
+```
+
+
+
+|                    | `f4ee5cfe` | `d7788a28` | `86758662` | `30d4bffe` | `9fa107a4` | `bf26c858` |
+|:-------------------|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|
+|Layout ID           |     1      |     3      |     3      |     4      |     4      |     7      |
+|Layout error        |    4.2%    |    7.4%    |    7.4%    |    2.6%    |    2.6%    |    5.5%    |
+|Word space          |    3.35    |    3.52    |    3.52    |    3.52    |    3.52    |    3.51    |
+|Word space, min     |    1.91    |    1.86    |    1.86    |    1.86    |    1.86    |    1.83    |
+|Word space, max     |    6.18    |    6.2     |    6.2     |    6.2     |    6.2     |    6.04    |
+|Word space, SD      |   0.699    |   0.816    |   0.816    |   0.816    |   0.816    |   0.824    |
+|Word space, RMSE    |   0.775    |   0.857    |   0.857    |   0.857    |   0.857    |   0.856    |
+|Hyphen count        |     28     |     22     |     22     |     22     |     22     |     65     |
+|Chapter v-space, SD |   0.516    |   0.548    |   0.408    |   0.548    |   0.408    |   0.516    |
+
+
+
+Manual review of these proofs found that all of the layout 3 & 4 options suffer
+from some awkward chapter transitions and bad line breaks, and the layout 1
+option ends rather awkwardly on a short verso page.
+
+That leaves layout 7!
+
+
+
+
+
+|                                    |                                   |
+|-----------------------------------:|:----------------------------------|
+|                          typeset ID|`f4a2d443252d4daf90590814f6074c43` |
+|                           page size|4.038″ × 6.730″ (M6; 2-up m3)      |
+|                      textblock size|16 picas × 32 lines (8ve; 2-up m3) |
+|                 characters per line|46.7                               |
+|                 inner–outer margins|0.531″:0.850″ (m6)                 |
+|                  top–bottom margins|0.567″:0.850″ (5th)                |
+|         margin ratios (IT-OT-OB-IB)|m2-5th-unison-m6                   |
+|        2-up margin ratios (IIT-IIB)|M7-M3                              |
+|                        layout error|5.5%                               |
+|                body text page count|27                                 |
+|                body text line count|817                                |
+|               paragraph indentation|20 points (M6)                     |
+|                word space in points|3.51 [1.83–6.04]                   |
+|                    hyphenated lines|65 (8%)                            |
+| lines of space padding chapters 2–7|3-2-2-2-3-2                        |
+|         typical type usage per page|69–83%                             |
+|         maximum type usage per page|96%                                |
+
+
+
+# Analyzing the final proof
+
+## Word space consistency
+
+<img src="figure/best_layout_wordspace_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+## Tightest & loosest lines
+
+
+
+| page | line | word space |text                                                |
+|:----:|:----:|:----------:|:---------------------------------------------------|
+|  25  |  16  |    1.83    |¶  “Certainly,” replied the man. “For example       |
+|  23  |  1   |    1.90    |fatigue, or intemperance will overtake them. Fur-   |
+|  18  |  19  |    1.90    |each second. They heard the mites speak fairly in-  |
+|  6   |  15  |    1.92    |¶  “Same with us,” said the Sirian. “we always      |
+|  26  |  5   |    1.92    |¶  “It is,” answered the Leibnitzian,“the hand      |
+|  9   |  1   |    1.92    |departure, came in tears to remonstrate. She was a  |
+|  9   |  2   |    1.96    |pretty, petite brunette who was only 660 fathoms    |
+|  5   |  21  |    1.96    |¶  “We only have 72,” said the academic,“and        |
+|  11  |  29  |    1.97    |having seen the nearly imperceptible pond we call   |
+|  13  |  9   |    2.02    |you say, because everything on Saturn and Jupiter   |
+|  15  |  4   |    2.03    |lows, putting it on his fingernail without pressing |
+|  12  |  20  |    2.03    |¶  “But,” answered the other,“you have pretty       |
+|  2   |  23  |    2.06    |feet in diameter, which would evade ordinary mi-    |
+|  9   |  8   |    2.06    |years in your arms, you leave me to go on a voyage  |
+|  4   |  2   |    2.07    |things, he could not, upon seeing the smallness of  |
+|  4   |  12  |    2.12    |had a good heart, he understood very quickly that   |
+|  15  |  22  |    2.14    |was holding; but he did not suspect anything else   |
+|  17  |  20  |    2.15    |what would they have to say? To speak, one must     |
+|  7   |  24  |    5.08    |¶  “Apparently,” replied the voyager, “this         |
+|  22  |  28  |    5.14    |¶  “Do not waste your time,” someone re-            |
+|  2   |  26  |    5.23    |of his country, an extremely ignorant worry-        |
+|  10  |  16  |    5.30    |Father Castel will write, perhaps even agree-       |
+|  11  |  26  |    5.35    |the going is much easier when one turns on          |
+|  20  |  23  |    5.37    |see more than ever that one must not judge          |
+|  21  |  18  |    5.42    |“Oh intelligent atoms, in which the Eternal         |
+|  16  |  26  |    5.46    |“look how they are carrying loads, stooping,        |
+|  5   |  24  |    5.47    |senses, our ring, our five moons, we are too        |
+|  5   |  10  |    5.53    |¶  “What am I supposed to do with your              |
+|  5   |  5   |    5.55    |¶  “Ugh!” said the other, “leave off with           |
+|  21  |  26  |    5.58    |¶  At this all the philosophers shook their         |
+|  1   |  17  |    5.61    |¶  Certain geometers, always of use to the          |
+|  25  |  26  |    6.04    |¶  So Micromegas, addressing another sage           |
+
+
+
+
