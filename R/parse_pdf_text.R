@@ -99,5 +99,23 @@ parse_pdf_text <- function(x, strict = TRUE) {
       )
   )
 
-  relocate(y, "text", .after = everything())
+  # fix numbering when quotation is padded by half-lines
+  if (params$aristotle_space == 0.5) {
+    y <- y |>
+      mutate(
+        .by = "page",
+        line = .data$line + (cumsum(.data$quotation) > 0) - .data$quotation
+      )
+
+    y <- bind_rows(
+      y,
+      y |>
+        filter(.data$quotation) |>
+        slice_max(.data$line) |>
+        mutate(line = .data$line + 1L, text = "", quotation = FALSE)
+    )
+  }
+
+  relocate(y, "text", .after = everything()) |>
+    arrange(across(c("page", "line")))
 }
