@@ -39,7 +39,7 @@ In `vignette("hj_optimization")`, we performed a grid search of typesetting
 parameters that control hyphenation and justification. For each candidate text
 width, we identified the set of typesetting parameters that produces justified
 text with the least distorted word space. No solutions were found for a
-`r filter(layout_candidates, !text_width %in% hj_proofs$text_width)$text_width_picas`-pica
+`r dplyr::filter(layout_candidates, !text_width %in% hj_proofs$text_width)$text_width_picas`-pica
 text width, leaving us with `r nrow(hj_proofs)` layout candidates moving
 forward.
 
@@ -97,13 +97,13 @@ best_pagination_proofs |>
     hyphen_count,
     ch_vspace_sd
   ) |>
-  mutate(
+  dplyr::mutate(
     across(where(is.double), ~ format(sprintf("%.3g", .))),
     across(where(is.integer), as.character)
   ) |>
   pivot_longer(-id, names_to = " ") |>
   pivot_wider(names_from = "id") |>
-  mutate(
+  dplyr::mutate(
     ` ` = ` ` |>
       sub(pattern = "_(min|max)$", replacement = ", \\1") |>
       sub(pattern = "_(sd|rmse)$", replacement = ", \\U\\1", perl = TRUE) |>
@@ -125,7 +125,7 @@ That leaves layout 7!
 best_layout <- typeset(
   params = slice_min(best_pagination_proofs, n = 1, word_space_max) |>
     tidy_params() |>
-    mutate(
+    dplyr::mutate(
       draft = FALSE,
       title_page = TRUE,
       ch1pre = ch1pre - 1, ch1post = ch1post + 1,
@@ -159,8 +159,8 @@ best_layout <- typeset(
     .,
     by = intersect(names(layout_candidates), names(.))
   ) |>
-  rename(layout_error = error) |>
-  mutate(
+  dplyr::rename(layout_error = error) |>
+  dplyr::mutate(
     log_summary = map(id, function(id) {
       y <- parse_tex_log(id)
       y <- y[, c("exception_count", "overfull_count", "underfull_count")]
@@ -172,7 +172,7 @@ best_layout <- typeset(
     })
   ) |>
   unnest(log_summary) |>
-  mutate(
+  dplyr::mutate(
     word_space_summary = map(id, function(id) {
       y <- analyze_whitespace(id) |>
         select(matches("mean|sd|rmse|min|max"))
@@ -181,7 +181,7 @@ best_layout <- typeset(
     })
   ) |>
   unnest(word_space_summary) |>
-  mutate(
+  dplyr::mutate(
     hyphen_summary = map(id, function(id) {
       y <- count_hyphen_runs(id, verbose = TRUE)
       stopifnot(all(y$hyphens == "-"))
@@ -190,7 +190,7 @@ best_layout <- typeset(
     })
   ) |>
   unnest(hyphen_summary) |>
-  mutate(
+  dplyr::mutate(
     page_break_summary = map(id, function(id) {
       y <- analyze_page_breaks(id) |>
         transmute(
@@ -210,7 +210,7 @@ best_layout <- typeset(
     })
   ) |>
   unnest(page_break_summary) |>
-  mutate(
+  dplyr::mutate(
     type_usage_summary = map(id, function(id) {
       y <- estimate_type_usage(id, verbose = TRUE)
       stopifnot(all(y$pct <= 1))
@@ -257,10 +257,10 @@ best_layout_text <- expand_grid(
   line = seq(max(best_layout_text$line))
 ) |>
   anti_join(best_layout_text, by = c("page", "line")) |>
-  mutate(
+  dplyr::mutate(
     dta = map(row_number(), function(x) {
       best_layout_text |>
-        filter(text == "") |>
+        dplyr::filter(text == "") |>
         select(-page, -line) |>
         distinct()
     })
@@ -272,7 +272,7 @@ best_layout_text <- expand_grid(
 
 ```{r best_layout_table, echo = FALSE, dependson = "best_layout"}
 best_layout |>
-  mutate(
+  dplyr::mutate(
     parindent_ratio = round_ratios(parindent, leading) |>
       names(),
     across(ends_with("ratio"), function(x) {
@@ -294,7 +294,7 @@ best_layout |>
     `textblock size` = "%.0f picas × %.0f lines (%s; 2-up %s)" |>
       sprintf(text_width_picas, text_height_lines, text_ratio, text_2up_ratio),
     `characters per line` = best_layout_text |>
-      filter(expected_width == 72.27 * best_layout$text_width) |>
+      dplyr::filter(expected_width == 72.27 * best_layout$text_width) |>
       with(mean(nchar(text))) |>
       sprintf(fmt = "%.3g"),
     `inner–outer margins` = "%.3f″:%.3f″ (%s)" |>
@@ -308,7 +308,7 @@ best_layout |>
     `layout error` = sprintf("%.2g%%", 100 * layout_error),
     `body text page count` = as.character(max(best_layout_text$page)),
     `body text line count` = best_layout_text |>
-      filter(!chapter, !epigraph, !closing, !text %in% "") |>
+      dplyr::filter(!chapter, !epigraph, !closing, !text %in% "") |>
       nrow() |>
       as.character(),
     `paragraph indentation` = "%.0f points (%s)" |>
@@ -323,8 +323,8 @@ best_layout |>
     `lines of space padding chapters 2–7` = best_layout |>
       select(matches("^ch[2-7]")) |>
       pivot_longer(everything()) |>
-      mutate(name = as.integer(gsub("\\D", "", name))) |>
-      summarise(.by = name, vspace = sum(value)) |>
+      dplyr::mutate(name = as.integer(gsub("\\D", "", name))) |>
+      dplyr::summarise(.by = name, vspace = sum(value)) |>
       with(paste(vspace, collapse = "-")),
     `typical type usage per page` = "%.2g–%.2g%%" |>
       sprintf(100 * type_usage_lb, 100 * type_usage_ub),
@@ -341,7 +341,7 @@ best_layout |>
 
 ```{r best_layout_wordspace_plot, echo = FALSE, dependson = "best_layout"}
 best_layout_text |>
-  mutate(
+  dplyr::mutate(
     err = (coalesce(expected_width / natural_width, 1) - 1),
     chap_label = if_else(chapter, cumsum(chapter), NA)
   ) |>
@@ -375,12 +375,12 @@ best_layout_text |>
 
 ```{r best_layout_wordspace_list, echo = FALSE, dependson = "best_layout"}
 best_layout_text |>
-  filter(
+  dplyr::filter(
     (expected_width == 72.27 * best_layout$text_width) |
       (expected_width == 72.27 * best_layout$text_width - best_layout$parindent)
   ) |>
-  mutate(error = coalesce(word_space_actual / word_space_expected, 1) - 1) |>
-  filter(!between(
+  dplyr::mutate(error = coalesce(word_space_actual / word_space_expected, 1) - 1) |>
+  dplyr::filter(!between(
     error,
     quantile(error, probs = 0.025),
     quantile(error, probs = 0.981)

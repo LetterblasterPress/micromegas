@@ -33,7 +33,7 @@ hj_params <- expand_grid(
     ws_avg = seq(11 / 4, 11 / 3, length.out = 5),
     ws_max = seq(11 / 3, 11 / 2, length.out = 9)
   ) |>
-    filter(ws_min < ws_avg, ws_avg < ws_max) |>
+    dplyr::filter(ws_min < ws_avg, ws_avg < ws_max) |>
     transmute(
       ws = ws_avg / 2.94556,
       ws_stretch = (ws_max - ws_avg) / 1.47278,
@@ -55,7 +55,7 @@ hj_params <- expand_grid(
   # don't penalize bad page breaks while evaluating hyphenation & justification
   interlinepenalty = 0, clubpenalty = 0, widowpenalty = 0, brokenpenalty = 0
 ) |>
-  filter(pretolerance < tolerance) |>
+  dplyr::filter(pretolerance < tolerance) |>
   unnest(layouts) |>
   unnest(ws)
 ```
@@ -74,11 +74,11 @@ hj_proofs <- inner_join(
   by = "id",
   hj_proofs,
   map_dfr(hj_proofs$id, parse_tex_log) |>
-    filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
-    mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
-    filter(hyphen_runs == 0) |>
+    dplyr::filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
+    dplyr::mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
+    dplyr::filter(hyphen_runs == 0) |>
     with(tibble(id, map_dfr(id, analyze_whitespace))) |>
-    filter(word_space_min > 1)
+    dplyr::filter(word_space_min > 1)
 )
 
 # for each set of acceptable params, typeset proofs for every layout candidate
@@ -92,11 +92,11 @@ hj_proofs <- inner_join(
   by = "id",
   hj_proofs,
   map_dfr(hj_proofs$id, parse_tex_log) |>
-    filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
-    mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
-    filter(hyphen_runs == 0) |>
+    dplyr::filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
+    dplyr::mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
+    dplyr::filter(hyphen_runs == 0) |>
     with(tibble(id, map_dfr(id, analyze_whitespace))) |>
-    filter(word_space_min > 1)
+    dplyr::filter(word_space_min > 1)
 )
 
 # for each layout candidate, pick the set(s) of params with the lowest RMSE

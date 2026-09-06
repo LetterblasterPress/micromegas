@@ -25,6 +25,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 library(letterblasteR)
 library(micromegas)
+library(tidyverse)
 
 INST_PATH <- path(rprojroot::find_package_root_file(), "inst")
 ```

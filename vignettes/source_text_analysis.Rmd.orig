@@ -23,12 +23,12 @@ source_text() |>
   unlist() |>
   tibble() |>
   set_names("word") |>
-  summarise(word_count = n(), .by = "word") |>
+  dplyr::summarise(word_count = n(), .by = "word") |>
   group_by(token = tolower(word)) |>
-  mutate(token_count = sum(word_count)) |>
+  dplyr::mutate(token_count = sum(word_count)) |>
   ungroup() |>
-  mutate(freq_ntile = 100 * percent_rank(token_count)) |>
-  filter(
+  dplyr::mutate(freq_ntile = 100 * percent_rank(token_count)) |>
+  dplyr::filter(
     freq_ntile > 90,
     grepl("^[A-Z]", word),
     !grepl("^[A-Z-]+$", word),

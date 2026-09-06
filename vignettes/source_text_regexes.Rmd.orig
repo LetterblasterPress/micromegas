@@ -30,7 +30,7 @@ source_text_regexes <- tibble(
     if_else(grepl("Anima|ejusmodi", text), "aristotle", NA)
   )
 ) |>
-  filter(!text %in% "", !grepl("^:::", text)) |>
+  dplyr::filter(!text %in% "", !grepl("^:::", text)) |>
   transmute(
     chapter = grepl("^# Chapter", text),
     epigraph = environment %in% "epigraph",
@@ -131,7 +131,7 @@ source_text_regexes <- tibble(
     regex = strsplit(regex, "\n")
   ) |>
   unnest(regex) |>
-  mutate(
+  dplyr::mutate(
     regex = if_else(
       epigraph | quotation,
       regex |>

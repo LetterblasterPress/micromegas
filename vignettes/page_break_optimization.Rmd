@@ -59,15 +59,15 @@ recursive_params <- list(
 
 # filter out redundant grid-search combos, favoring visual balance
 recursive_params$ch1 <- recursive_params$ch1 |>
-  filter(ch1pre >= ch1post) |>
-  filter(!duplicated(paste(loose_headings, ch1pre + ch1post)))
+  dplyr::filter(ch1pre >= ch1post) |>
+  dplyr::filter(!duplicated(paste(loose_headings, ch1pre + ch1post)))
 
 recursive_params$ch2 <- recursive_params$ch2 |>
-  filter((ch2pre - ch2post) %in% 0:1)
+  dplyr::filter((ch2pre - ch2post) %in% 0:1)
 
 recursive_params$ch3 <- recursive_params$ch3 |>
-  filter((ch3pre - ch3post) %in% 0:1) |>
-  filter(
+  dplyr::filter((ch3pre - ch3post) %in% 0:1) |>
+  dplyr::filter(
     (ch3pre == ch3post) |
       !(
         duplicated(ch3pre + reflow_epi_3 + ch3post) |
@@ -76,11 +76,11 @@ recursive_params$ch3 <- recursive_params$ch3 |>
   )
 
 recursive_params$ch4 <- recursive_params$ch4 |>
-  filter((ch4pre - ch4post) %in% 0:1)
+  dplyr::filter((ch4pre - ch4post) %in% 0:1)
 
 recursive_params$ch5 <- recursive_params$ch5 |>
-  filter((ch5pre - ch5post) %in% 0:1) |>
-  filter(
+  dplyr::filter((ch5pre - ch5post) %in% 0:1) |>
+  dplyr::filter(
     (ch5pre == ch5post) |
       !(
         duplicated(ch5pre + reflow_epi_5 + ch5post) |
@@ -89,10 +89,10 @@ recursive_params$ch5 <- recursive_params$ch5 |>
   )
 
 recursive_params$ch6 <- recursive_params$ch6 |>
-  filter((ch6pre - ch6post) %in% 0:1)
+  dplyr::filter((ch6pre - ch6post) %in% 0:1)
 
 recursive_params$ch7 <- recursive_params$ch7 |>
-  filter((ch7pre - ch7post) %in% 0:1)
+  dplyr::filter((ch7pre - ch7post) %in% 0:1)
 
 # expand grid-search params to all textblock candidates
 recursive_params <- map(recursive_params, function(x) {
@@ -100,8 +100,8 @@ recursive_params <- map(recursive_params, function(x) {
     slice_head(n = 1, by = c("text_height_lines", "text_width")) |>
     tidy_params() |>
     select(-any_of(reduce(map(recursive_params, names), c))) |>
-    mutate(`header-includes` = "\\usepackage[check=warning]{widows-and-orphans}") |>
-    mutate(grid_search = map(row_number(), ~x)) |>
+    dplyr::mutate(`header-includes` = "\\usepackage[check=warning]{widows-and-orphans}") |>
+    dplyr::mutate(grid_search = map(row_number(), ~x)) |>
     unnest(grid_search) |>
     distinct()
 })
@@ -148,15 +148,15 @@ for (i in 1:7) {
     by = "id",
     solutions,
     map_dfr(solutions$id, parse_tex_log) |>
-      filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
-      mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
-      filter(hyphen_runs == 0) |>
+      dplyr::filter(exception_count == 0, overfull_count == 0, underfull_count == 0) |>
+      dplyr::mutate(hyphen_runs = map_dbl(id, count_hyphen_runs)) |>
+      dplyr::filter(hyphen_runs == 0) |>
       with(map_dfr(id, ~ tibble(id = ., analyze_page_breaks(.)))) |>
-      filter(w_o_h_total == 0) |>
-      mutate(broken_epigraphs = map_dbl(id, count_broken_epigraphs)) |>
-      filter(broken_epigraphs == 0) |>
-      mutate(type_usage = map_dbl(id, estimate_type_usage)) |>
-      filter(type_usage <= 1)
+      dplyr::filter(w_o_h_total == 0) |>
+      dplyr::mutate(broken_epigraphs = map_dbl(id, count_broken_epigraphs)) |>
+      dplyr::filter(broken_epigraphs == 0) |>
+      dplyr::mutate(type_usage = map_dbl(id, estimate_type_usage)) |>
+      dplyr::filter(type_usage <= 1)
   )
 
   # drop yet-to-be-optimized params
@@ -209,7 +209,7 @@ solutions <- solutions |>
     .,
     by = intersect(names(layout_candidates), names(.))
   ) |>
-  rename(layout_error = error)
+  dplyr::rename(layout_error = error)
 ```
 
 Finally, tidy the output and append metrics describing the quality of the
@@ -218,7 +218,7 @@ resulting typeset.
 
 ``` r
 pagination_proofs <- solutions |>
-  mutate(
+  dplyr::mutate(
     log_summary = map(id, function(id) {
       y <- parse_tex_log(id)
       y <- y[, c("exception_count", "overfull_count", "underfull_count")]
@@ -233,7 +233,7 @@ pagination_proofs <- solutions |>
   slice_min(n = 1, exception_count) |>
   slice_min(n = 1, overfull_count) |>
   slice_min(n = 1, underfull_count) |>
-  mutate(
+  dplyr::mutate(
     word_space_summary = map(id, function(id) {
       y <- analyze_whitespace(id) |>
         select(matches("mean|sd|rmse|min|max"))
@@ -242,7 +242,7 @@ pagination_proofs <- solutions |>
     })
   ) |>
   unnest(word_space_summary) |>
-  mutate(
+  dplyr::mutate(
     hyphen_summary = map(id, function(id) {
       y <- count_hyphen_runs(id, verbose = TRUE)
       stopifnot(all(y$hyphens == "-"))
@@ -256,7 +256,7 @@ pagination_proofs <- solutions |>
     })
   ) |>
   unnest(hyphen_summary) |>
-  mutate(
+  dplyr::mutate(
     page_break_summary = map(id, function(id) {
       y <- analyze_page_breaks(id) |>
         transmute(
@@ -280,7 +280,7 @@ pagination_proofs <- solutions |>
   slice_min(n = 1, orphans) |>
   slice_min(n = 1, hyphenated_breaks) |>
   slice_min(n = 1, broken_epigraphs) |>
-  mutate(
+  dplyr::mutate(
     ch_vspace_sd = apply(1, sd, X = cbind(
       ch2pre + ch2post,
       ch3pre + ch3post,
@@ -290,7 +290,7 @@ pagination_proofs <- solutions |>
       ch7pre + ch7post
     ))
   ) |>
-  mutate(
+  dplyr::mutate(
     type_usage_summary = map(id, function(id) {
       y <- estimate_type_usage(id, verbose = TRUE)
       stopifnot(all(y$pct <= 1))

@@ -29,7 +29,6 @@ knitr::opts_chunk$set(
 
 library(letterblasteR)
 library(micromegas)
-library(plyr, include.only = "round_any")
 library(tidyverse)
 ```
 
@@ -62,8 +61,8 @@ textblock_candidates <- expand_grid(
 ) |>
 
   # limit to textblocks with a 12-point baseline skip
-  mutate(text_height = text_width * text_ratio) |>
-  filter((text_height %% 12) == 0) |> # limit to 12-point baseline skip
+  dplyr::mutate(text_height = text_width * text_ratio) |>
+  dplyr::filter((text_height %% 12) == 0) |> # limit to 12-point baseline skip
 
   # tidy up
   transmute(
@@ -86,7 +85,7 @@ textblock_candidates |>
       factor(levels = names(sort(ratios, decreasing = TRUE))) |>
       droplevels()
   ) |>
-  summarise(.by = c("w", "h", "ratio"), n = n()) |>
+  dplyr::summarise(.by = c("w", "h", "ratio"), n = n()) |>
   ggplot(aes(w, h)) +
   geom_tile(aes(fill = ratio)) +
   coord_fixed() +
@@ -122,25 +121,25 @@ redundancy will be eliminated later.
 
 ```{r page_candidates, cache = TRUE, dependson = "textblock_candidates"}
 page_candidates <- textblock_candidates |>
-  mutate(
+  dplyr::mutate(
     page_candidates = map2(text_width, text_height, function(w, h) {
       expand_grid(
 
         # consider page widths with 4-12 picas added for horizontal margins
         page_width = seq(
-          round_any(w + 4 * 12 / 72.27, 0.001, floor),
-          round_any(w + 12 * 12 / 72.27, 0.001, ceiling),
+          plyr::round_any(w + 4 * 12 / 72.27, 0.001, floor),
+          plyr::round_any(w + 12 * 12 / 72.27, 0.001, ceiling),
           by = 0.001
         ),
 
         # consider page heights with 5-12 lines added for vertical margins
         page_height = seq(
-          round_any(h + 5 * 12 / 72.27, 0.001, floor),
-          round_any(h + 12 * 12 / 72.27, 0.001, ceiling),
+          plyr::round_any(h + 5 * 12 / 72.27, 0.001, floor),
+          plyr::round_any(h + 12 * 12 / 72.27, 0.001, ceiling),
           by = 0.001
         )
       ) |>
-        mutate(
+        dplyr::mutate(
           page_ratio = as.numeric(round_ratios(
             w = page_width,
             h = page_height,
@@ -148,7 +147,7 @@ page_candidates <- textblock_candidates |>
           ))
         ) |>
         drop_na() |>
-        mutate(
+        dplyr::mutate(
           page_2up_ratio = as.numeric(round_ratios(
             w = 2 * page_width,
             h = page_height,
@@ -174,10 +173,10 @@ margin_candidates <- expand_grid(
   bt_ratio = as.numeric(ratios[ratios > 1 & ratios <= 2]),
   oi_ratio = as.numeric(ratios[ratios > 1 & ratios <= 2])
 ) |>
-  mutate(
+  dplyr::mutate(
     margins = map2(bt_ratio, oi_ratio, function(bt, oi) {
       page_candidates |>
-        mutate(
+        dplyr::mutate(
           b_mar = (page_height - text_height) * (bt / (1 + bt)),
           t_mar = (page_height - text_height) * (1 / (1 + bt)),
           o_mar = (page_width - text_width) * (oi / (1 + oi)),
@@ -188,7 +187,7 @@ margin_candidates <- expand_grid(
           )
         ) |>
         drop_na() |>
-        mutate(
+        dplyr::mutate(
           ot_ratio = round_ratios(w = o_mar, h = t_mar),
           ob_ratio = round_ratios(w = o_mar, h = b_mar),
           ti_ratio = round_ratios(w = i_mar, h = t_mar),
@@ -198,7 +197,7 @@ margin_candidates <- expand_grid(
           bii_ratio = round_ratios(b_mar, 2 * i_mar)
         ) |>
         drop_na() |>
-        mutate(across(where(is.numeric), as.numeric))
+        dplyr::mutate(across(where(is.numeric), as.numeric))
     })
   ) |>
   unnest(margins) |>
@@ -223,7 +222,7 @@ extreme margins.
 
 ```{r layout_candidates, cache = TRUE, dependson = "margin_candidates"}
 layout_candidates <- margin_candidates |>
-  mutate(
+  dplyr::mutate(
 
     # page area over two-page spread
     page_area_expected = 2 * mean(c(
@@ -259,16 +258,16 @@ layout_candidates <- margin_candidates |>
     bii_area_expected = mean(c(b_mar^2 / bii_ratio, (2 * i_mar)^2 * bii_ratio)),
     bii_area_actual = b_mar * (2 * i_mar)
   ) |>
-  mutate( # account for overlap
+  dplyr::mutate( # account for overlap
     across(matches("^page_(2up_)?area"), ~ . / 2),
     across(matches("^[tb]ii?_area"), ~ . / 2)
   ) |>
   pivot_longer(matches("expected|actual$")) |>
   separate_wider_delim(name, "_area_", names = c("area_name", "name")) |>
   pivot_wider() |>
-  mutate(error = abs(actual - expected)) |>
-  summarise(.by = names(margin_candidates), error = sum(error)) |>
-  mutate(
+  dplyr::mutate(error = abs(actual - expected)) |>
+  dplyr::summarise(.by = names(margin_candidates), error = sum(error)) |>
+  dplyr::mutate(
     across(ends_with("ratio"), function(x) {
       y <- x
       if (is.numeric(x)) y <- name_ratios(x)
@@ -282,7 +281,7 @@ layout_candidates <- margin_candidates |>
     by = c("text_width", "text_height", "page_ratio"),
     order_by = error
   ) |>
-  filter(
+  dplyr::filter(
     error < 0.1,
     between(72.27 * b_mar / 12, 3, 6),
     between(72.27 * t_mar / 12, 2, 5),
@@ -291,7 +290,7 @@ layout_candidates <- margin_candidates |>
     ratios[as.character(ob_ratio)] <= 1
   ) |>
   arrange(text_ratio, page_ratio, text_pct) |>
-  mutate(layout_id = row_number(), across(where(is.factor), droplevels)) |>
+  dplyr::mutate(layout_id = row_number(), across(where(is.factor), droplevels)) |>
   relocate(layout_id) |>
   relocate(error, .after = everything())
 ```
@@ -310,7 +309,7 @@ layout_candidates |>
     text_pct,
     error
   ) |>
-  mutate(
+  dplyr::mutate(
     text_pct = sprintf("%.2g%%", 100 * text_pct),
     error = sprintf("%.2g%%", 100 * error),
     across(where(is.factor), as.character),
