@@ -1,36 +1,9 @@
 # https://ropensci.org/blog/2019/12/08/precompute-vignettes/
 
-library(fs)
-library(knitr)
+fs::dir_ls("vignettes", glob = "*.Rmd.orig") |>
+  map(~ knitr::knit(., output = fs::path_ext_remove(sub("\\d{2}_", "", .))))
 
-"vignettes/source_text_md.Rmd.orig" |>
-  knit(output = "vignettes/source_text_md.Rmd")
-
-"vignettes/source_text_md_tex.Rmd.orig" |>
-  knit(output = "vignettes/source_text_md_tex.Rmd")
-
-"vignettes/source_text_regexes.Rmd.orig" |>
-  knit(output = "vignettes/source_text_regexes.Rmd")
-
-"vignettes/source_text_analysis.Rmd.orig" |>
-  knit(output = "vignettes/source_text_analysis.Rmd")
-
-"vignettes/layout_candidates.Rmd.orig" |>
-  knit(output = "vignettes/layout_candidates.Rmd")
-
-"vignettes/hj_optimization.Rmd.orig" |>
-  knit(output = "vignettes/hj_optimization.Rmd")
-
-"vignettes/page_break_optimization.Rmd.orig" |>
-  knit(output = "vignettes/page_break_optimization.Rmd")
-
-"vignettes/layout_optimization.Rmd.orig" |>
-  knit(output = "vignettes/layout_optimization.Rmd")
-
-"vignettes/imposition.Rmd.orig" |>
-  knit(output = "vignettes/imposition.Rmd")
-
-if (dir_exists("figure")) {
-  dir_copy("figure", "vignettes/figure", overwrite = TRUE)
-  dir_delete("figure")
+if (fs::dir_exists("figure")) {
+  fs::dir_copy("figure", "vignettes/figure", overwrite = TRUE)
+  fs::dir_delete("figure")
 }

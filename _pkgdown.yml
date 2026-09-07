@@ -35,7 +35,7 @@ articles:
   - title: "Text analysis"
     navbar: "Text analysis"
     contents:
-      - source_text_analysis
+      - text_analysis
       - source_text_regexes
   - title: "Book design"
     navbar: "Book design"
