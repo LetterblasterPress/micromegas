@@ -21,7 +21,7 @@ layouts candidates with:
 - whole-pica text widths that yield 44--66 characters per line
 - whole-line text heights that produce a harmoniously proportioned text block
 - page dimensions and margins that produce harmonious proportions for all
-  rectangles of positive & negative space on the two-page spread
+  rectangles of positive & negative space on the one- and two-page spread
 
 In `vignette("hj_optimization")`, we performed a grid search of typesetting
 parameters that control hyphenation and justification. For each candidate text
