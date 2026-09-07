@@ -1,0 +1,157 @@
+---
+title: "Imposition"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Imposition}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook imposes the final PDF into signatures and saves the results as
+> package files. Two versions are provided: `imposed_final.pdf` and
+> `imposed_draft.pdf` which draws frames around each page.
+
+
+
+Impose various PDFs with and without gutters between pages.
+
+
+``` r
+expand_grid(
+  pdf_in = path(INST_PATH, "proofs", "final.pdf"),
+  delta_x = seq(0, 6 * PAPER_THICKNESS, length.out = 4),
+  frame = c(FALSE, TRUE)
+) |>
+  dplyr::mutate(
+    pdf_out = path(
+      INST_PATH,
+      "proofs",
+      "imposed_%s-gutter%i" |>
+        sprintf(
+          if_else(frame, "draft", "final"),
+          as.integer(unclass(forcats::fct_inorder(as.character(delta_x)))) - 1L
+        ),
+      ext = "pdf"
+    )
+  ) |>
+  pmap_lgl(function(pdf_in, delta_x = 0, frame = TRUE, pdf_out) {
+    design_size <- pdf_in |>
+      pdftools::pdf_pagesize() |>
+      transmute(h = height / 72, w = width / 72) |>
+      distinct()
+
+    stock_size <- design_size |>
+      transmute(
+        h = h + TRIM_H,
+        w = 2 * w + TRIM_W
+        # w = 25 / 3
+      )
+
+    template <- ("
+      \\documentclass[oneside]{article}
+      \\usepackage{pdfpages}
+      \\usepackage[
+        letterpaper,
+        layoutsize={%.6fin, %.6fin},
+        layoutoffset={%.6fin, %.6fin},
+        showcrop
+      ]{geometry}
+      \\begin{document}
+      \\includepdf[
+        pages={{}, -},
+        signature = 16,
+        landscape,
+        openright,
+        noautoscale,
+        offset=-0.125in 0,
+        delta=0 %.6fin,
+        frame
+      ]{%s}
+      \\end{document}
+    ") |>
+      strsplit("\\n    ") |>
+      unlist() |>
+      paste(collapse = "\n") |>
+      sprintf(
+        stock_size$h, stock_size$w,
+        (8.5 - stock_size$h) / 2, (11 - stock_size$w) / 2,
+        delta_x,
+        fs::path_real(path(INST_PATH, "proofs", "final.pdf"))
+      )
+
+    if (!frame) {
+      template <- sub(",\n\\s*frame", "", template)
+    }
+
+    tmp_dir <- dir_create(file_temp("imposition_files_"))
+    on.exit(unlink(tmp_dir, recursive = TRUE))
+
+    write(template, path(tmp_dir, "imposed.tex"))
+    with_dir(tmp_dir, system2("lualatex", "imposed.tex", stdout = FALSE))
+    file_copy(
+      path(tmp_dir, "imposed.pdf"),
+      pdf_out,
+      overwrite = TRUE
+    )
+
+    return(file_exists(pdf_out))
+  }) |>
+  all() |>
+  stopifnot()
+```
+
+Interleave imposed documents with gutters to compensate for the width of the
+folded signature. Innermost sheet in each signature will have no gutter;
+outermost sheet will have a gutter equal to the thickness of six sheets of
+paper.
+
+
+``` r
+tibble(
+  pdf_path = dir_ls(path(INST_PATH, "proofs"), glob = "*-gutter*.pdf"),
+  draft = grepl("draft", pdf_path),
+  gutter_level = as.integer(sub("^.+gutter(\\d)\\.pdf$", "\\1", pdf_path)),
+  page = map_int(pdf_path, pdftools::pdf_length) |>
+    map(seq)
+) |>
+  unnest(page) |>
+  filter(gutter_level == rep(rep(3:0, each = 2), 2)[page]) |>
+  arrange(draft, page) |>
+  summarise(
+    .by = draft,
+    body = "\\includepdf[pages={%i},noautoscale]{%s}" |>
+      sprintf(page, pdf_path) |>
+      paste(collapse = "\n")
+  ) |>
+  pmap_lgl(function(draft, body) {
+    pdf_out <- path(INST_PATH, "proofs") |>
+      path(if_else(draft, "imposed_draft", "imposed_final"), ext = "pdf")
+
+    template <- ("
+      \\documentclass[letterpaper,landscape,oneside]{article}
+      \\usepackage{pdfpages}
+      \\begin{document}
+      %s
+      \\end{document}
+    ") |>
+      strsplit("\\n\\s*") |>
+      unlist() |>
+      paste(collapse = "\n") |>
+      sprintf(body)
+
+    tmp_dir <- dir_create(file_temp("imposition_files_"))
+    on.exit(unlink(tmp_dir, recursive = TRUE))
+
+    write(template, path(tmp_dir, "imposed.tex"))
+    with_dir(tmp_dir, system2("lualatex", "imposed.tex", stdout = FALSE))
+    file_copy(
+      path(tmp_dir, "imposed.pdf"),
+      pdf_out,
+      overwrite = TRUE
+    )
+
+    return(file_exists(pdf_out))
+  }) |>
+  all() |>
+  stopifnot()
+```

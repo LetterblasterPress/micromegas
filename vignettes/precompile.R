@@ -27,6 +27,9 @@ library(knitr)
 "vignettes/layout_optimization.Rmd.orig" |>
   knit(output = "vignettes/layout_optimization.Rmd")
 
+"vignettes/imposition.Rmd.orig" |>
+  knit(output = "vignettes/imposition.Rmd")
+
 if (dir_exists("figure")) {
   dir_copy("figure", "vignettes/figure", overwrite = TRUE)
   dir_delete("figure")
