@@ -9,7 +9,8 @@ vignette: >
 
 > This notebook brings all upstream optimization work together to identify the
 > best overall layout to use for this edition. Result is saved as a package
-> dataset, see `help(best_layout)`.
+> dataset, see `help(best_layout)`, and the final PDF is saved as a package
+> file.
 
 
 

@@ -9,7 +9,8 @@ vignette: >
 
 > This notebook brings all upstream optimization work together to identify the
 > best overall layout to use for this edition. Result is saved as a package
-> dataset, see `help(best_layout)`.
+> dataset, see `help(best_layout)`, and the final PDF is saved as a package
+> file.
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -23,6 +24,8 @@ knitr::opts_chunk$set(
 library(letterblasteR)
 library(micromegas)
 library(tidyverse)
+
+INST_PATH <- path(rprojroot::find_package_root_file(), "inst")
 ```
 
 # Summary of upstream work
@@ -397,4 +400,10 @@ best_layout_text |>
 
 ```{r export, include = FALSE, dependson = "best_layout"}
 usethis::use_data(best_layout, overwrite = TRUE)
+
+file_copy(
+  proof_path(best_layout$id),
+  path(dir_create(INST_PATH, "proofs"), "final.pdf"),
+  overwrite = TRUE
+)
 ```
