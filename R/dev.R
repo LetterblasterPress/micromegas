@@ -62,17 +62,12 @@ dev_check <- function() {
     args = "--force-multiarch"
   )$status == 0)
 
-  message("\nRunning code coverage check...")
-  y <- c(y, dev_coverage())
-
   return(invisible(all(y)))
 }
 
 #' Helper functions called by `dev_check()`
 #'
 #' Learn more about what [dev_check()] does.
-#'
-#' @param file passed to [covr::file_report()], optional. See Details.
 #'
 #' @details
 #'
@@ -87,8 +82,6 @@ dev_check <- function() {
 #'    [spelling::update_wordlist()].
 #'  * [dev_build_site()] builds the documentation site with a call to
 #'    [pkgdown::build_site()], then loads a preview in the RStudio Viewer pane.
-#'  * [dev_coverage()] runs code coverage checks with calls to
-#'    [covr::package_coverage()] and [covr::file_report()].
 #'
 #' ## Spell checking
 #'
@@ -97,14 +90,6 @@ dev_check <- function() {
 #' re-sorted, deduplicated, and purged of unused words. If spelling errors are
 #' found, a user confirmation is required before updating the custom dictionary;
 #' otherwise an error is thrown.
-#'
-#' ## Coverage reports
-#'
-#' If a `file` is specified, a coverage report will be generated for that file.
-#' If a `file` is not specified, and package coverage is less than 100%, then
-#' the a report will be generated for the file with the least coverage. A
-#' package coverage summary is printed to the console, and if a file report is
-#' generated, it is previewed in the RStudio Viewer pane.
 #'
 #' @seealso [spelling::wordlist]
 #'
@@ -178,22 +163,6 @@ dev_build_site <- function() {
       dir_copy(file_temp()) |>
       path("index", ext = "html") |>
       rstudioapi::viewer()
-  }
-
-  return(invisible(TRUE))
-}
-
-#' @rdname dev_check_helpers
-dev_coverage <- function(file = NULL) {
-  coverage <- covr::package_coverage()
-  print(coverage)
-
-  file_coverage <- covr::coverage_to_list(coverage)$filecoverage
-
-  # if (!is.null(file) || min(file_coverage) < 100) {
-  if (!is.null(file)) {
-    if (is.null(file)) file <- head(names(sort(file_coverage)), 1)
-    covr::file_report(coverage, file)
   }
 
   return(invisible(TRUE))

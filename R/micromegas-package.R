@@ -2,9 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom covr coverage_to_list
-#' @importFrom covr file_report
-#' @importFrom covr package_coverage
 #' @importFrom devtools check
 #' @importFrom devtools document
 #' @importFrom digest digest

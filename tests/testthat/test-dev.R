@@ -156,63 +156,6 @@ test_that("dev_spell_check() throws warning, prints misspellings, updates wordli
   expect_args(mock_update_wordlist, 1, confirm = FALSE)
 })
 
-## dev_coverage ################################################################
-
-## dev_coverage() - 100% coverage
-test_that("dev_coverage() calls `package_coverage`", {
-  mock_package_coverage <- mock("mock package coverage")
-  stub(dev_coverage, "covr::package_coverage", mock_package_coverage)
-
-  mock_coverage_to_list <- mock(list(filecoverage = c("a" = 100, "b" = 100)))
-  stub(dev_coverage, "covr::coverage_to_list", mock_coverage_to_list)
-
-  mock_file_report <- mock("mock file coverage")
-  stub(dev_coverage, "covr::file_report", mock_file_report)
-
-  o <- utils::capture.output(expect_true(dev_coverage()))
-  expect_true(grepl("mock package coverage", o))
-  expect_called(mock_package_coverage, 1)
-  expect_args(mock_coverage_to_list, 1, "mock package coverage")
-  expect_called(mock_file_report, 0)
-})
-
-## dev_coverage() - < 100% coverage
-test_that("dev_coverage() calls `package_coverage` then `file_report` on file with least coverage", {
-  skip()
-  mock_package_coverage <- mock("mock package coverage")
-  stub(dev_coverage, "covr::package_coverage", mock_package_coverage)
-
-  mock_coverage_to_list <- mock(list(filecoverage = c("a" = 100, "b" = 99)))
-  stub(dev_coverage, "covr::coverage_to_list", mock_coverage_to_list)
-
-  mock_file_report <- mock("mock file coverage")
-  stub(dev_coverage, "covr::file_report", mock_file_report)
-
-  o <- utils::capture.output(expect_true(dev_coverage()))
-  expect_true(grepl("mock package coverage", o))
-  expect_called(mock_package_coverage, 1)
-  expect_args(mock_coverage_to_list, 1, "mock package coverage")
-  expect_args(mock_file_report, 1, "mock package coverage", "b")
-})
-
-## dev_coverage() - user supplied file
-test_that("dev_coverage() calls `package_coverage` then `file_report` on requested file if supplied", {
-  mock_package_coverage <- mock("mock package coverage")
-  stub(dev_coverage, "covr::package_coverage", mock_package_coverage)
-
-  mock_coverage_to_list <- mock(list(filecoverage = c("a" = 100, "b" = 100)))
-  stub(dev_coverage, "covr::coverage_to_list", mock_coverage_to_list)
-
-  mock_file_report <- mock("mock file coverage")
-  stub(dev_coverage, "covr::file_report", mock_file_report)
-
-  o <- utils::capture.output(expect_true(dev_coverage("mock file")))
-  expect_true(grepl("mock package coverage", o))
-  expect_called(mock_package_coverage, 1)
-  expect_args(mock_coverage_to_list, 1, "mock package coverage")
-  expect_args(mock_file_report, 1, "mock package coverage", "mock file")
-})
-
 ## dev_build_site ##############################################################
 
 ## dev_build_site() - with _pkgdown.yml
@@ -330,9 +273,6 @@ test_that("dev_check() calls lower level utilities", {
   mock_check <- mock(list(status = 0))
   stub(dev_check, "devtools::check", mock_check)
 
-  mock_dev_coverage <- mock(TRUE)
-  stub(dev_check, "dev_coverage", mock_dev_coverage)
-
   mock_build_site <- mock(TRUE)
   stub(dev_check, "dev_build_site", mock_build_site)
 
@@ -342,6 +282,5 @@ test_that("dev_check() calls lower level utilities", {
   expect_called(mock_dev_document, 1)
   expect_called(mock_dev_spell_check, 1)
   expect_called(mock_check, 1)
-  expect_called(mock_dev_coverage, 1)
   expect_called(mock_build_site, 1)
 })

@@ -12,7 +12,6 @@ BugReports: https://github.com/LetterblasterPress/micromegas/issues
 Depends:
     R (>= 4.1)
 Imports: 
-    covr,
     devtools,
     digest,
     dplyr,

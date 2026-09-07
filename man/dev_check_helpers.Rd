@@ -6,7 +6,6 @@
 \alias{dev_document}
 \alias{dev_spell_check}
 \alias{dev_build_site}
-\alias{dev_coverage}
 \title{Helper functions called by \code{dev_check()}}
 \usage{
 dev_lint()
@@ -16,11 +15,6 @@ dev_document()
 dev_spell_check()
 
 dev_build_site()
-
-dev_coverage(file = NULL)
-}
-\arguments{
-\item{file}{passed to \code{\link[covr:file_report]{covr::file_report()}}, optional. See Details.}
 }
 \value{
 Each function returns \code{TRUE} invisibly upon success.
@@ -40,8 +34,6 @@ with calls to \code{\link[spelling:spell_check_package]{spelling::spell_check_pa
 \code{\link[spelling:update_wordlist]{spelling::update_wordlist()}}.
 \item \code{\link[=dev_build_site]{dev_build_site()}} builds the documentation site with a call to
 \code{\link[pkgdown:build_site]{pkgdown::build_site()}}, then loads a preview in the RStudio Viewer pane.
-\item \code{\link[=dev_coverage]{dev_coverage()}} runs code coverage checks with calls to
-\code{\link[covr:package_coverage]{covr::package_coverage()}} and \code{\link[covr:file_report]{covr::file_report()}}.
 }
 \subsection{Spell checking}{
 
@@ -50,15 +42,6 @@ spelling errors. If no spelling errors are found, the custom dictionary is
 re-sorted, deduplicated, and purged of unused words. If spelling errors are
 found, a user confirmation is required before updating the custom dictionary;
 otherwise an error is thrown.
-}
-
-\subsection{Coverage reports}{
-
-If a \code{file} is specified, a coverage report will be generated for that file.
-If a \code{file} is not specified, and package coverage is less than 100\%, then
-the a report will be generated for the file with the least coverage. A
-package coverage summary is printed to the console, and if a file report is
-generated, it is previewed in the RStudio Viewer pane.
 }
 }
 \references{

@@ -2,10 +2,6 @@
 
 <!-- badges: start -->
 
-[![Codecov test
-coverage](https://codecov.io/gh/LetterblasterPress/micromegas/graph/badge.svg)](https://app.codecov.io/gh/LetterblasterPress/micromegas)
-[![R-CMD-check](https://github.com/LetterblasterPress/micromegas/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/LetterblasterPress/micromegas/actions/workflows/R-CMD-check.yaml)
-
 <!-- badges: end -->
 
 Welcome to the Micromégas Project page. This site documents the planning and

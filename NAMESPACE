@@ -6,11 +6,6 @@ export(tidy_params)
 export(typeset)
 export(typesetting_metadata)
 export(typesetting_template)
-importFrom(covr,
-  coverage_to_list,
-  file_report,
-  package_coverage
-)
 importFrom(devtools,
   check,
   document
