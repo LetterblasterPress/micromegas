@@ -1,0 +1,299 @@
+---
+title: "Paper planning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Paper planning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook estimates the amount of paper needed to produce this edition of
+> Micromégas and identify the most cost-effective source.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dpi = 1200,
+  fig.align = "center",
+  fig.cap = NA
+)
+
+library(micromegas)
+library(tidyverse)
+```
+
+# Evaluating purchase options
+
+Talas has some purchase options, but the most cost-effective is to buy single
+sheets directly from Mohawk.
+
+```{r purchase_options, echo = FALSE}
+purchase_options <- bind_rows(
+  # Talas
+  tibble(
+    source = "Talas, 25x38",
+    short = 25,
+    long = 38,
+    list(
+      "5-24" = 2.30,
+      "25-99" = 2.15,
+      "100-499" = 2.00,
+      "500-999" = 1.75,
+      "1000-1000" = 1.60
+    ) |>
+      imap_dfr(~ tibble(
+        count = strsplit(.y, "-") |>
+          map(as.integer) |>
+          map(~ seq(.[1], .[2])),
+        price = .x
+      )) |>
+      unnest(count) |>
+      mutate(price = price * count)
+  ),
+
+  # Mohawk
+  tibble(
+    source = "Mohawk, 19x12.5",
+    short = 19,
+    long = 12.5,
+    count = seq(1000),
+    price = 0.30 * count
+  ),
+  tibble(
+    source = "Mohawk, 23x35 carton",
+    short = 23,
+    long = 35,
+    count = seq(1000),
+    price = 708.70 * ceiling(count / 1000)
+  ),
+  tibble(
+    source = "Mohawk, 25x38",
+    short = 25,
+    long = 38,
+    count = seq(999),
+    price = 1.17 * count
+  ),
+  tibble(
+    source = "Mohawk, 25x38 carton",
+    short = 25,
+    long = 38,
+    count = seq(1000),
+    price = 833.76 * ceiling(count / 1000)
+  )
+)
+```
+
+```{r purchase_options_plot, echo = FALSE, fig.asp = 0.5}
+purchase_options |>
+  filter(price <= max(price[grepl("25x38 carton", source)])) |>
+  mutate(area = (count * short * long) / 12^2, price_per_area = price / area) |>
+  mutate(.by = source, ppa_mean = mean(price_per_area)) |>
+  arrange(ppa_mean) |>
+  mutate(source = forcats::fct_inorder(source)) |>
+  ggplot(aes(area, price)) +
+  geom_line(aes(colour = source)) +
+  geom_vline(
+    xintercept = inst("proofs", "final.pdf") |>
+      pdftools::pdf_pagesize() |>
+      transmute(h = height / 72, w = width / 72) |>
+      summarise(
+        sheets = ceiling(n() / 4),
+        sheets = sheets + 2, # made endpapers
+        sheets = ceiling(1.2 * sheets), # spoilage
+        sheets = ceiling(1.1 * sheets), # cutting waste
+        h = unique(h),
+        w = unique(w)
+      ) |>
+      with(50 * (sheets * h * w) / 12^2),
+    linetype = 3
+  ) +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::dollar) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.title = element_blank(),
+    plot.title.position = "plot",
+    plot.caption = element_text(hjust = 1),
+    plot.caption.position = "plot"
+  ) +
+  labs(
+    title = "Cost-effectiveness of paper-buying options",
+    subtitle = "dotted line estimates paper requirments for an edition of fifty",
+    caption = "updated 2026-08-04",
+    x = "square feet"
+  )
+```
+
+```{r pass_counts, echo = FALSE}
+pass_counts <- inst("proofs", "imposed_final.pdf") |>
+  pdftools::pdf_text() |>
+  imap_dfr(~ tibble(
+    page = .y,
+    text = .x |>
+      strsplit("\n") |>
+      unlist() |>
+      stringr::str_trim() |>
+      strsplit(" {3,}") |>
+      unlist() |>
+      stringr::str_trim()
+  )) |>
+  filter(
+    grepl("MICROMEGAS", text) |
+      grepl("^chapter [iv]+$", text, ignore.case = TRUE) |
+      text %in% as.character(seq(2 * max(page)))
+  ) |>
+  arrange(
+    grepl("MICROMEGAS", text),
+    grepl("chapter", tolower(text)),
+    suppressWarnings(as.integer(text)),
+    text
+  ) |>
+  transmute(
+    sheet = as.integer(ceiling(page / 2)),
+    pass = text |>
+      sub(pattern = "MICROMEGAS", replacement = "TP") |>
+      sub(pattern = "chapter +", replacement = ""),
+    pass_count = if_else(pass == "TP", 5, 1)
+  ) %>%
+  bind_rows(
+    tibble(sheet = max(.$sheet) + 1:2, pass = c("EP1", "EP2"), pass_count = 0)
+  ) |>
+  mutate(pass = forcats::fct_inorder(pass)) |>
+  arrange(sheet, pass) |>
+  summarise(
+    .by = sheet,
+    passes = paste(as.character(pass), collapse = "-"),
+    pass_count = as.integer(sum(pass_count))
+  )
+```
+
+Each book requires `r nrow(pass_counts)` sheets including two sheets for made
+endpapers. Each page of text requires a pass, each chapter heading requires a
+pass with red ink, and I've budgeted five passes for the title page.
+
+```{r pass_counts_table, echo = FALSE}
+knitr::kable(rename("pass count" = "pass_count", pass_counts))
+```
+
+```{r paper_estimates, echo = FALSE}
+paper_estimates <- tibble(
+  n = seq(10, 75),
+  sheets_min = n * max(pass_counts$sheet),
+  spoils_lb = n + sum(pass_counts$pass_count),
+  spoils_ub = n + 2 * sum(pass_counts$pass_count),
+  sheets_lb = sheets_min + spoils_lb,
+  sheets_ub = sheets_min + spoils_ub
+) |>
+  mutate(stock = map(n, function(i) {
+    tibble(
+      stock = c("19×12.5", "23×35", "25×38"),
+      w = as.numeric(map(strsplit(stock, "×"), head, n = 1)),
+      h = as.numeric(map(strsplit(stock, "×"), tail, n = 1)),
+      sheets_per_stock = floor(
+        floor(w / (2 * best_layout$page_width)) * floor(h / best_layout$page_height)
+      )
+    )
+  })) |>
+  unnest(stock) |>
+  mutate(
+    stock_min = ceiling(sheets_min / sheets_per_stock),
+    stock_lb = ceiling(sheets_lb / sheets_per_stock),
+    stock_ub = ceiling(sheets_ub / sheets_per_stock)
+  )
+```
+
+If we estimate spoilage of 1 sheet per book plus 1--2 sheets per pass, the cost
+of paper per book is well under \$1.50.
+
+```{r paper_estimates_plot, echo = FALSE, fig.asp = 0.5}
+paper_estimates |>
+  select(edition_size = n, short = w, long = h, starts_with("stock_")) |>
+  pivot_longer(starts_with("stock_"), values_to = "count") |>
+  inner_join(
+    purchase_options,
+    by = c("short", "long", "count"),
+    relationship = "many-to-many"
+  ) |>
+  summarise(
+    .by = c("source", "edition_size"),
+    price_per_book_min = min(price) / unique(edition_size),
+    price_per_book_avg = mean(price) / unique(edition_size),
+    price_per_book_ub = max(price) / unique(edition_size)
+  ) |>
+  filter(price_per_book_ub < 5) |>
+  arrange(desc(price_per_book_avg)) |>
+  mutate(source = forcats::fct_inorder(source)) |>
+  ggplot(aes(edition_size, price_per_book_avg)) +
+  geom_point(aes(colour = source)) +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::dollar) +
+  theme(
+    axis.title.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.title = element_blank(),
+    plot.title.position = "plot"
+  ) +
+  labs(title = "Paper costs per book", x = "edition size")
+```
+
+# Actual purchase
+
+40 × Mohawk Superfine, smooth, white, 80-pound text (118 GSM), 25×38″
+
+```{r paper_plan, echo = FALSE}
+paper_plan <- paper_estimates |>
+  filter(stock == "25×38", n == 55) |>
+  transmute(
+    edition_size = n,
+    stock,
+    stock_count = 40,
+    sheets = stock_count * sheets_per_stock,
+    sheets_min
+  ) |>
+  with((sheets - sheets_min) * prop.table(pass_counts$pass_count + 1)) |>
+  round() |>
+  imap_dfr(~ tibble(sheet_name = .y, edition_size = 55, spoils = .x)) |>
+  summarise(.by = sheet_name, across(everything(), sum)) |>
+  full_join(pass_counts, by = c("sheet_name" = "sheet")) |>
+  transmute(sheet_name, pass_count, passes, sheets = edition_size + spoils, spoils) |>
+  mutate(across(c("sheets", "spoils"), ~ if_else(passes == "EP2", . + 1, .)))
+```
+
+Each sheet of stock paper yields 15 print-ready sheets after cutting -- enough
+for 60 books with no spoilage. In practice, I'm aiming for an edition of 50 with
+a stretch goal of 55.
+
+```{r paper_plan_plot, echo = FALSE, fig.asp = 0.5}
+paper_estimates |>
+  filter(stock == "25×38", stock_min <= 40, stock_ub >= 40) |> # actual purchase
+  ggplot(aes(n, stock_lb)) +
+  geom_hline(yintercept = 40, colour = "darkred") +
+  geom_point() +
+  geom_pointrange(aes(ymin = stock_min, ymax = stock_ub)) +
+  scale_x_continuous(breaks = seq(1, 100)) +
+  scale_y_continuous(breaks = seq(0, 99, by = 4)) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  labs(
+    x = "edition size",
+    y = "sheets of 25×38″ stock"
+  )
+```
+
+The following table budgets all `r 40 * 15` sheets of cut stock to produce 55
+books, with extra spoilage distributed proportionally to the number of passes
+each sheet requires.
+
+```{r paper_plan_table, echo = FALSE}
+stopifnot(sum(paper_plan$sheets) == 40 * 15)
+paper_plan |>
+  rename(sheet = sheet_name, `pass count` = pass_count) |>
+  knitr::kable()
+```

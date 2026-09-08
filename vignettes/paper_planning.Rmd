@@ -1,0 +1,85 @@
+---
+title: "Paper planning"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Paper planning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> This notebook estimates the amount of paper needed to produce this edition of
+> Micromégas and identify the most cost-effective source.
+
+
+
+# Evaluating purchase options
+
+Talas has some purchase options, but the most cost-effective is to buy single
+sheets directly from Mohawk.
+
+
+
+<img src="figure/purchase_options_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+
+
+Each book requires 10 sheets including two sheets for made
+endpapers. Each page of text requires a pass, each chapter heading requires a
+pass with red ink, and I've budgeted five passes for the title page.
+
+
+
+| sheet|passes          | pass count|
+|-----:|:---------------|----------:|
+|     1|11-12-iv        |          3|
+|     2|9-10-TP         |          7|
+|     3|1-2-7-8-i-iii   |          6|
+|     4|3-4-5-6-ii      |          5|
+|     5|13-14-27-v      |          4|
+|     6|15-16-25-26     |          4|
+|     7|17-18-23-24-vi  |          5|
+|     8|19-20-21-22-vii |          5|
+|     9|EP1             |          0|
+|    10|EP2             |          0|
+
+
+
+
+
+If we estimate spoilage of 1 sheet per book plus 1--2 sheets per pass, the cost
+of paper per book is well under \$1.50.
+
+<img src="figure/paper_estimates_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+# Actual purchase
+
+40 × Mohawk Superfine, smooth, white, 80-pound text (118 GSM), 25×38″
+
+
+
+Each sheet of stock paper yields 15 print-ready sheets after cutting -- enough
+for 60 books with no spoilage. In practice, I'm aiming for an edition of 50 with
+a stretch goal of 55.
+
+<img src="figure/paper_plan_plot-1.png" alt="" style="display: block; margin: auto;" />
+
+The following table budgets all 600 sheets of cut stock to produce 55
+books, with extra spoilage distributed proportionally to the number of passes
+each sheet requires.
+
+
+
+| sheet| pass count|passes          | sheets| spoils|
+|-----:|----------:|:---------------|------:|------:|
+|     1|          3|11-12-iv        |     59|      4|
+|     2|          7|9-10-TP         |     63|      8|
+|     3|          6|1-2-7-8-i-iii   |     62|      7|
+|     4|          5|3-4-5-6-ii      |     61|      6|
+|     5|          4|13-14-27-v      |     60|      5|
+|     6|          4|15-16-25-26     |     60|      5|
+|     7|          5|17-18-23-24-vi  |     61|      6|
+|     8|          5|19-20-21-22-vii |     61|      6|
+|     9|          0|EP1             |     56|      1|
+|    10|          0|EP2             |     57|      2|
+
+
